@@ -1,34 +1,22 @@
-// One-off script: seeds admin credentials into Firestore settings/competition_config
-// Run with: node scripts/seed-admin-config.mjs
+// Re-syncs default settings (incl. corrected countdown date) to Firestore
 import { readFileSync } from 'node:fs';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const config = JSON.parse(readFileSync(new URL('../firebase-applet-config.json', import.meta.url), 'utf8'));
 
 const app = initializeApp(config);
 const db = getFirestore(app, config.firestoreDatabaseId);
 
-const ADMIN_CREDENTIALS = {
-  adminSecretToken: 'hurc2026_super_admin',
-  portalCustomUrl: 'admin-portal-hurc-secure-auth'
+const UPDATES = {
+  countdownTargetDate: '2026-12-28T09:00:00'
 };
 
 try {
-  const ref = doc(db, 'settings', 'competition_config');
-  const snap = await getDoc(ref);
-  const existing = snap.exists() ? snap.data() : {};
-  await setDoc(ref, { ...ADMIN_CREDENTIALS }, { merge: true });
-  console.log('✅ Admin credentials seeded to Firestore settings/competition_config');
-  console.log('   adminSecretToken:', ADMIN_CREDENTIALS.adminSecretToken);
-  console.log('   portalCustomUrl:', ADMIN_CREDENTIALS.portalCustomUrl);
-  console.log('   (previous doc existed:', snap.exists() ? 'yes' : 'no' + ')');
-  if (snap.exists()) {
-    console.log('   previous adminSecretToken:', existing.adminSecretToken || '(none)');
-  }
+  await setDoc(doc(db, 'settings', 'competition_config'), UPDATES, { merge: true });
+  console.log('✅ Settings updated in Firestore:', UPDATES);
 } catch (e) {
-  console.error('❌ Failed to seed admin credentials:', e.message || e);
-  console.error('   Check Firestore security rules allow writes to settings/competition_config.');
+  console.error('❌ Failed:', e.message || e);
   process.exit(1);
 }
 process.exit(0);

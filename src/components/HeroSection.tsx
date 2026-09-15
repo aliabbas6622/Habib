@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Flame, ArrowRight } from 'lucide-react';
 import { HURC_LOGO } from '../data/modulesData';
+import { useCompetition } from '../context/CompetitionContext';
 
 interface HeroSectionProps {
   onRegisterClick: () => void;
 }
 
 export default function HeroSection({ onRegisterClick }: HeroSectionProps) {
-  // Real-time ticking countdown to HURC competition date (e.g. December 28, 2026 or approx 103 days)
-  const targetDate = new Date('2026-12-28T09:00:00Z').getTime();
+  const { settings } = useCompetition();
+
+  // Real-time ticking countdown driven by the admin-configurable target date
+  const targetDate = new Date(settings.countdownTargetDate).getTime();
 
   const calculateTimeLeft = () => {
     const now = new Date().getTime();
@@ -33,7 +36,7 @@ export default function HeroSection({ onRegisterClick }: HeroSectionProps) {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [targetDate]);
 
   const formatNumber = (num: number) => String(num).padStart(2, '0');
 

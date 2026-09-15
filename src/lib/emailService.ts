@@ -180,7 +180,7 @@ export function generateAmbassadorConfirmationEmailHtml(reg: AmbassadorRegistrat
   `;
 }
 
-// Dispatch email to registeree and store record in Firestore
+// Dispatch email to registeree via the /api/send-email Vercel function and store record in Firestore
 export async function sendRegistrationConfirmationEmail(
   reg: TeamRegistrationData | AmbassadorRegistrationData,
   totalFeePKR: number = 3500
@@ -209,10 +209,33 @@ export async function sendRegistrationConfirmationEmail(
     subject,
     type: isTeam ? 'team_confirmation' : 'ambassador_confirmation',
     htmlContent,
-    status: 'Delivered',
+    status: 'Sent',
     timestamp: new Date().toISOString(),
     sentAt: new Date().toLocaleString()
   };
+
+  // Attempt real delivery through the serverless endpoint
+  try {
+    const res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: recipientEmail,
+        subject,
+        html: htmlContent
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      emailRecord.status = 'Delivered';
+    } else {
+      emailRecord.status = 'Failed';
+      console.warn('Email API returned error:', data?.error || res.status);
+    }
+  } catch (err) {
+    emailRecord.status = 'Failed';
+    console.warn('Email dispatch failed (recorded as Failed):', err);
+  }
 
   try {
     // Persist dispatched email to Firestore

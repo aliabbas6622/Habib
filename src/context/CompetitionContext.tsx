@@ -8,7 +8,7 @@ import {
   onSnapshot 
 } from 'firebase/firestore';
 import { db, testFirestoreConnection } from '../lib/firebase';
-import { COMPETITION_MODULES, INITIAL_REGISTRATIONS } from '../data/modulesData';
+import { COMPETITION_MODULES } from '../data/modulesData';
 import { CompetitionModule, TeamRegistrationData, AmbassadorRegistrationData } from '../types';
 import { sendRegistrationConfirmationEmail, DispatchedEmail, getDispatchedEmails } from '../lib/emailService';
 
@@ -29,6 +29,12 @@ export interface CompetitionSettings {
   contactEmail: string;
   earlyBirdDiscountPercent: number;
   droneWorkshopStandaloneStrict: boolean;
+  // Email delivery (Gmail SMTP via /api/send-email Vercel function).
+  // NOTE: smtpPassword is intentionally NOT persisted to Firestore (public doc).
+  // It lives only in Vercel env vars: HURC_SMTP_EMAIL / HURC_SMTP_PASSWORD.
+  smtpEmail?: string;
+  smtpPasswordConfigured?: boolean;
+  smtpFromName?: string;
   pricings: Record<string, ModulePricing>;
   moduleCustomAssets: Record<string, {
     customBannerUrl?: string;
@@ -39,8 +45,8 @@ export interface CompetitionSettings {
 }
 
 const DEFAULT_SETTINGS: CompetitionSettings = {
-  announcementText: 'Registrations Open for 2026 Competition & Campus Ambassadors',
-  countdownTargetDate: '2026-06-27T09:00:00',
+  announcementText: 'HURC 2026 • Habib University Robotics Competition',
+  countdownTargetDate: '2026-12-28T09:00:00',
   adminSecretToken: 'hurc2026_super_admin',
   portalCustomUrl: 'admin-portal-hurc-secure-auth',
   contactEmail: 'hurc.support@habib.edu.pk',
@@ -90,11 +96,12 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
   });
 
   const [registrations, setRegistrations] = useState<(TeamRegistrationData | AmbassadorRegistrationData)[]>(() => {
+    // Only hydrate this device's locally cached registrations; never seed demo data to visitors
     try {
       const saved = localStorage.getItem('hurc_2026_registrations');
       if (saved) return JSON.parse(saved);
     } catch {}
-    return INITIAL_REGISTRATIONS;
+    return [];
   });
 
   const [sentEmails, setSentEmails] = useState<DispatchedEmail[]>([]);

@@ -332,7 +332,7 @@ export default function RegistrationPage({
             Your official application for Habib University Robotics Competition 2026 has been recorded in the Firebase cloud database.
           </p>
 
-          {/* Email Dispatched Alert Card */}
+          {/* Email Dispatched Alert Card (wording reflects true delivery status) */}
           <div className="mt-6 p-4 rounded-2xl bg-[#22130b] border border-orange-500/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-orange-600/20 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
@@ -340,11 +340,24 @@ export default function RegistrationPage({
               </div>
               <div>
                 <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Automated Confirmation Email Dispatched</span>
+                  {lastDispatchedEmail?.status === 'Delivered' ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <span>Confirmation Email Sent</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-4 h-4 text-amber-400" />
+                      <span>Confirmation Email Could Not Be Sent</span>
+                    </>
+                  )}
                 </h4>
                 <p className="text-xs text-stone-400 mt-0.5">
-                  Sent to <strong className="text-stone-200">{recipientEmail}</strong> with your official schedule and venue dossier.
+                  {lastDispatchedEmail?.status === 'Delivered' ? (
+                    <>A confirmation email was sent to <strong className="text-stone-200">{recipientEmail}</strong>. Keep your registration ID for check-in.</>
+                  ) : (
+                    <>Your registration is saved, but the email to <strong className="text-stone-200">{recipientEmail}</strong> could not be delivered automatically. The organizing team will contact you — save your registration ID.</>
+                  )}
                 </p>
               </div>
             </div>

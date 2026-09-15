@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { 
   ShieldCheck, 
   DollarSign, 
@@ -24,7 +24,7 @@ import {
   Unlock,
   Key
 } from 'lucide-react';
-import { useCompetition } from '../context/CompetitionContext';
+import { useCompetition, CompetitionSettings } from '../context/CompetitionContext';
 import { useAuth } from '../context/AuthContext';
 import { TeamRegistrationData, AmbassadorRegistrationData } from '../types';
 import EmailPreviewModal from './EmailPreviewModal';
@@ -81,6 +81,28 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
   const [countdownDate, setCountdownDate] = useState(settings.countdownTargetDate);
   const [contactEmail, setContactEmail] = useState(settings.contactEmail);
   const [customSecretToken, setCustomSecretToken] = useState(settings.adminSecretToken);
+  const [smtpEmail, setSmtpEmail] = useState(settings.smtpEmail || '');
+  const [smtpPassword, setSmtpPassword] = useState('');
+  const [smtpFromName, setSmtpFromName] = useState(settings.smtpFromName || 'HURC 2026');
+  const [smtpTestStatus, setSmtpTestStatus] = useState<string | null>(null);
+
+  // Auto-unlock when the correct key is present in the URL (supports ?key= both
+  // inside the hash route (#/admin?key=...) and as a real query string)
+  useEffect(() => {
+    const extractKey = (): string | null => {
+      const hash = window.location.hash;
+      const qIndex = hash.indexOf('?');
+      if (qIndex !== -1) {
+        const fromHash = new URLSearchParams(hash.substring(qIndex)).get('key');
+        if (fromHash) return fromHash;
+      }
+      return new URLSearchParams(window.location.search).get('key');
+    };
+    const urlKey = extractKey();
+    if (urlKey && settings.adminSecretToken && urlKey === settings.adminSecretToken) {
+      setIsKeyUnlocked(true);
+    }
+  }, [settings.adminSecretToken]);
 
   // Selected module for asset uploads
   const [uploadSelectedModule, setUploadSelectedModule] = useState(modules[0]?.id || 'robowars');
@@ -99,7 +121,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
 
   const handleVerifyKey = (e: FormEvent) => {
     e.preventDefault();
-    if (enteredKey.trim() === settings.adminSecretToken || enteredKey.trim() === 'hurc2026_super_admin') {
+    if (settings.adminSecretToken && enteredKey.trim() === settings.adminSecretToken) {
       setIsKeyUnlocked(true);
     } else {
       alert('Invalid admin security key. Please enter the correct secret key.');
@@ -117,15 +139,60 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
       announcementText,
       countdownTargetDate: countdownDate,
       contactEmail,
-      adminSecretToken: customSecretToken
+      adminSecretToken: customSecretToken,
+      smtpEmail: smtpEmail.trim() || undefined,
+      smtpFromName: smtpFromName.trim() || 'HURC 2026'
     });
-    setSaveSuccessMessage('Competition announcements and countdown settings saved successfully!');
-    setTimeout(() => setSaveSuccessMessage(null), 3000);
+    if (smtpPassword.trim()) {
+      setSaveSuccessMessage('Settings saved. To activate email sending, also set HURC_SMTP_EMAIL and HURC_SMTP_PASSWORD in your Vercel project environment variables (password is intentionally not stored in the database for security).');
+    } else {
+      setSaveSuccessMessage('Competition settings saved successfully!');
+    }
+    setTimeout(() => setSaveSuccessMessage(null), 5000);
+  };
+
+  const handleTestSmtp = async () => {
+    if (!smtpPassword.trim()) {
+      setSmtpTestStatus('error');
+      setTimeout(() => setSmtpTestStatus(null), 6000);
+      return;
+    }
+    setSmtpTestStatus('testing');
+    try {
+      await updateSettings({
+        smtpEmail: smtpEmail.trim() || undefined,
+        smtpFromName: smtpFromName.trim() || 'HURC 2026'
+      });
+
+      const res = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Password passed transiently for this one request — never persisted
+          'x-hurc-smtp-pass': smtpPassword.trim()
+        },
+        body: JSON.stringify({
+          to: smtpEmail.trim(),
+          subject: '[HURC 2026] SMTP Test Email',
+          html: '<p>This is a test email from your HURC 2026 admin dashboard. If you are reading this, email delivery is working!</p>'
+        })
+      });
+      setSmtpTestStatus(res.ok ? 'success' : 'error');
+      setTimeout(() => setSmtpTestStatus(null), 6000);
+    } catch (e) {
+      setSmtpTestStatus('error');
+      setTimeout(() => setSmtpTestStatus(null), 6000);
+    }
   };
 
   const handleBannerFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 900 * 1024) {
+        alert('Image is too large (' + Math.round(file.size / 1024) + ' KB). Firestore documents cap at ~1MB, so please use an image under 900 KB, or paste an external image URL instead.');
+        e.target.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onload = async (event) => {
         const base64 = event.target?.result as string;
@@ -141,6 +208,11 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
     const file = e.target.files?.[0];
     if (file) {
       const sizeKB = Math.round(file.size / 1024) + ' KB';
+      if (file.size > 900 * 1024) {
+        alert('PDF is too large (' + sizeKB + '). Firestore documents cap at ~1MB, so hosted uploads are limited to 900 KB. For larger rulebooks, host the PDF externally and share the link with participants, or ask the developer to enable Firebase Storage uploads.');
+        e.target.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onload = async (event) => {
         const base64 = event.target?.result as string;
@@ -578,7 +650,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                       <h4 className="font-display font-bold text-white text-base">
                         Module Arena Banner Image
                       </h4>
-                      <p className="text-xs text-stone-400">Supported formats: JPG, PNG, WebP (Max 5MB)</p>
+                      <p className="text-xs text-stone-400">Supported formats: JPG, PNG, WebP (Max 900 KB — or paste an image URL below)</p>
                     </div>
                   </div>
 
@@ -661,10 +733,9 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                   </div>
 
                   {/* Upload input */}
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-300 mb-2">
-                      Upload Replacement PDF Rulebook (Max 15MB)
-                    </label>
+                  <div>                      <label className="block text-xs font-semibold text-stone-300 mb-2">
+                        Upload Replacement PDF Rulebook (Max 900 KB)
+                      </label>
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx"
@@ -975,6 +1046,92 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                   />
                   <p className="text-[11px] text-stone-500 mt-1">
                     Changing this updates the secret parameter required in your unique admin portal link.
+                  </p>
+                </div>
+
+                {/* EMAIL CONFIGURATION (Gmail SMTP) */}
+                <div className="p-4 rounded-xl bg-[#120804] border border-amber-900/60 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-orange-400 uppercase tracking-wider">
+                      Confirmation Email Sender (Gmail SMTP)
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      settings.smtpEmail
+                        ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                        : 'bg-amber-950 text-amber-300 border-amber-800'
+                    }`}>
+                      {settings.smtpEmail ? 'Address Set (password in Vercel env)' : 'Not Set Up'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-400 mb-1 uppercase">
+                        Gmail Address (From)
+                      </label>
+                      <input
+                        type="email"
+                        value={smtpEmail}
+                        onChange={(e) => setSmtpEmail(e.target.value)}
+                        placeholder="hurc3426@gmail.com"
+                        className="w-full px-3 py-2 rounded-xl bg-[#0d0704] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-400 mb-1 uppercase">
+                        Gmail App Password (16 chars)
+                      </label>
+                      <input
+                        type="password"
+                        value={smtpPassword}
+                        onChange={(e) => setSmtpPassword(e.target.value)}
+                        placeholder="xxxx xxxx xxxx xxxx (not stored in DB)"
+                        className="w-full px-3 py-2 rounded-xl bg-[#0d0704] border border-amber-950 text-xs text-stone-200 font-mono focus:outline-none focus:border-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-400 mb-1 uppercase">
+                      From Name
+                    </label>
+                    <input
+                      type="text"
+                      value={smtpFromName}
+                      onChange={(e) => setSmtpFromName(e.target.value)}
+                      placeholder="HURC 2026"
+                      className="w-full px-3 py-2 rounded-xl bg-[#0d0704] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleTestSmtp}
+                      disabled={smtpTestStatus === 'testing' || !smtpEmail.trim()}
+                      className="px-4 py-2 rounded-xl bg-[#2b170f] hover:bg-[#381f14] border border-amber-800/60 text-xs font-bold text-stone-200 disabled:opacity-40 flex items-center gap-2 cursor-pointer"
+                    >
+                      {smtpTestStatus === 'testing' ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-stone-500 border-t-orange-400 rounded-full animate-spin" />
+                          <span>Sending test...</span>
+                        </>
+                      ) : (
+                        <span>Save &amp; Send Test Email</span>
+                      )}
+                    </button>
+                    {smtpTestStatus === 'success' && (
+                      <span className="text-xs font-bold text-emerald-400">✓ Test email sent! Check your inbox.</span>
+                    )}
+                    {smtpTestStatus === 'error' && (
+                      <span className="text-xs font-bold text-red-400">✗ Test failed — verify Gmail address &amp; App Password.</span>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-stone-500 leading-relaxed">
+                    Until configured, confirmation emails are recorded as <strong className="text-amber-400">Failed</strong> and participants receive nothing.
+                    To enable: (1) create a Gmail App Password at <span className="font-mono text-stone-400">myaccount.google.com → Security → 2-Step Verification → App passwords</span> (2FA required on the HURC Gmail),
+                    (2) add <span className="font-mono text-stone-400">HURC_SMTP_EMAIL</span> and <span className="font-mono text-stone-400">HURC_SMTP_PASSWORD</span> in Vercel → Settings → Environment Variables,
+                    (3) redeploy. Use the test button (with the password pasted above) to verify without a redeploy.
                   </p>
                 </div>
 
