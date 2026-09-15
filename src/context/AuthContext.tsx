@@ -31,6 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Known admin emails by default
 const DEFAULT_ADMIN_EMAILS = [
   'aliabbas6622tel@gmail.com',
+  'hurc3426@gmail.com',
   'admin@hurc.habib.edu.pk',
   'organizer@hurc2026.com'
 ];

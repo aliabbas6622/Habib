@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Flame, ArrowRight, Sparkles } from 'lucide-react';
+import { Flame, ArrowRight } from 'lucide-react';
 import { HURC_LOGO } from '../data/modulesData';
 
 interface HeroSectionProps {
@@ -57,12 +57,6 @@ export default function HeroSection({ onRegisterClick }: HeroSectionProps) {
               referrerPolicy="no-referrer"
             />
           </div>
-        </div>
-
-        {/* Announcement Pill Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#2a170d]/80 border border-orange-500/40 text-orange-400 text-xs sm:text-sm font-semibold mb-5 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-orange-400 animate-spin" style={{ animationDuration: '6s' }} />
-          <span>Registrations Open for 2026 Competition &amp; Campus Ambassadors</span>
         </div>
 
         {/* Massive Display Title */}

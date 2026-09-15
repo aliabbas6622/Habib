@@ -127,7 +127,6 @@ export default function App() {
 
       {/* Footer */}
       <Footer
-        onOpenAdmin={navigateToAdmin}
         onNavigateHome={navigateToHome}
       />
 

@@ -11,11 +11,8 @@ import {
   Compass, 
   Flame,
   UserPlus,
-  LogIn,
   LogOut,
-  User,
-  ShieldAlert,
-  Sparkles
+  ShieldAlert
 } from 'lucide-react';
 import { COMPETITION_MODULES, HURC_LOGO } from '../data/modulesData';
 import { useAuth } from '../context/AuthContext';
@@ -35,7 +32,7 @@ export default function Navbar({
   onOpenAdmin,
   currentView
 }: NavbarProps) {
-  const { currentUser, userProfile, isAdmin, openAuthModal, signOut } = useAuth();
+  const { currentUser, userProfile, isAdmin, signOut } = useAuth();
   const [modulesDropdownOpen, setModulesDropdownOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -69,8 +66,8 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#120a06]/95 backdrop-blur-md border-b border-amber-950/60 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 px-3 sm:px-5 pt-3 pb-2">
+      <div className="max-w-7xl mx-auto rounded-3xl bg-[#120a06]/95 backdrop-blur-md border border-amber-950/60 shadow-lg px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
           {/* Logo & Branding */}
@@ -111,8 +108,13 @@ export default function Navbar({
               Home
             </button>
 
-            {/* Modules Dropdown Button & Menu */}
-            <div className="relative" ref={dropdownRef}>
+            {/* Modules Dropdown Button & Menu (opens on hover or click) */}
+            <div
+              className="relative"
+              ref={dropdownRef}
+              onMouseEnter={() => setModulesDropdownOpen(true)}
+              onMouseLeave={() => setModulesDropdownOpen(false)}
+            >
               <button
                 id="nav-modules-dropdown-btn"
                 onClick={() => setModulesDropdownOpen(!modulesDropdownOpen)}
@@ -164,26 +166,8 @@ export default function Navbar({
               )}
             </div>
 
-            {/* Admin Portal Direct Link */}
-            <button
-              id="nav-admin-btn"
-              onClick={onOpenAdmin}
-              className={`px-3 py-2 text-sm font-medium rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
-                currentView === 'admin'
-                  ? 'bg-amber-950/80 text-orange-400 border border-orange-500/50 shadow-[0_0_10px_rgba(249,115,22,0.3)]'
-                  : 'text-stone-300 hover:text-orange-400 hover:bg-stone-900/50'
-              }`}
-              title="Admin Portal & Customization"
-            >
-              <ShieldAlert className="w-4 h-4 text-orange-400" />
-              <span>Admin</span>
-              {isAdmin && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              )}
-            </button>
-
-            {/* User Auth Control */}
-            {currentUser ? (
+            {/* User Auth Control (only visible when already signed in, e.g. admin) */}
+            {currentUser && (
               <div className="relative" ref={userMenuRef}>
                 <button
                   id="nav-user-menu-btn"
@@ -256,15 +240,6 @@ export default function Navbar({
                   </div>
                 )}
               </div>
-            ) : (
-              <button
-                id="nav-signin-btn"
-                onClick={() => openAuthModal('signin')}
-                className="px-3.5 py-2 text-sm font-medium rounded-lg text-stone-300 hover:text-white hover:bg-stone-900/60 border border-stone-800 flex items-center gap-1.5 transition-all cursor-pointer"
-              >
-                <LogIn className="w-4 h-4 text-orange-400" />
-                <span>Sign In</span>
-              </button>
             )}
 
             {/* Register Now CTA Button */}
@@ -280,23 +255,6 @@ export default function Navbar({
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
-            {currentUser ? (
-              <button
-                onClick={() => onOpenAdmin()}
-                className="p-1.5 rounded-lg bg-[#20120b] border border-amber-900/60 text-orange-400"
-                title="Admin"
-              >
-                <ShieldAlert className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                onClick={() => openAuthModal('signin')}
-                className="px-2.5 py-1 text-xs font-medium text-stone-200 bg-stone-900 border border-stone-800 rounded-lg"
-              >
-                Sign In
-              </button>
-            )}
-
             <button
               id="mobile-register-btn"
               onClick={() => onNavigateRegister()}
@@ -328,22 +286,6 @@ export default function Navbar({
           >
             Home
           </button>
-          
-          <button
-            onClick={() => {
-              onOpenAdmin();
-              setMobileMenuOpen(false);
-            }}
-            className="w-full text-left px-3 py-2 rounded-lg text-orange-400 hover:bg-[#20120a] font-medium flex items-center justify-between"
-          >
-            <span className="flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4" />
-              <span>Admin Portal</span>
-            </span>
-            <span className="text-[10px] bg-orange-950 px-2 py-0.5 rounded border border-orange-800">
-              Customizer
-            </span>
-          </button>
 
           <div className="border-t border-amber-950/60 pt-2">
             <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-orange-400">
@@ -367,7 +309,7 @@ export default function Navbar({
           </div>
 
           <div className="pt-2 border-t border-amber-950/60 space-y-2">
-            {currentUser ? (
+            {currentUser && (
               <div className="p-3 rounded-xl bg-[#1e110a] border border-amber-900/60 flex items-center justify-between">
                 <div>
                   <div className="text-xs font-bold text-white">
@@ -387,17 +329,6 @@ export default function Navbar({
                   Sign Out
                 </button>
               </div>
-            ) : (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  openAuthModal('signin');
-                }}
-                className="w-full py-2.5 rounded-lg border border-stone-800 text-stone-200 text-sm font-semibold flex items-center justify-center gap-2"
-              >
-                <LogIn className="w-4 h-4 text-orange-400" />
-                <span>Sign In / Create Account</span>
-              </button>
             )}
 
             <button

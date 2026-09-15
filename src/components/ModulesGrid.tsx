@@ -47,7 +47,7 @@ export default function ModulesGrid({ onSelectModule }: ModulesGridProps) {
             key={module.id}
             id={`module-card-${module.id}`}
             onClick={() => onSelectModule(module.slug)}
-            className="group relative flex flex-col rounded-2xl bg-[#1a0f09] border border-amber-950/80 hover:border-orange-500/60 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(249,115,22,0.18)] cursor-pointer"
+            className="group relative flex flex-col rounded-2xl bg-[#1a0f09] border border-amber-950/80 hover:border-orange-500/60 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(249,115,22,0.18)] hover:-translate-y-1.5 cursor-pointer"
           >
             {/* Image Header with Badge Tag */}
             <div className="relative h-52 w-full overflow-hidden bg-[#120804]">
