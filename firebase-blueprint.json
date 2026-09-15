@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and authentication identity",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Registration": {
+      "title": "Registration",
+      "description": "Competition team or campus ambassador registration record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["team", "ambassador"] },
+        "teamName": { "type": "string" },
+        "selectedModules": { "type": "array" },
+        "status": { "type": "string", "enum": ["Pending Review", "Verified", "Approved", "Rejected"] },
+        "timestamp": { "type": "string" },
+        "submittedByUid": { "type": "string" }
+      },
+      "required": ["id", "type", "status", "timestamp"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "Application custom settings, module prices, and content overrides",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id"]
+    },
+    "SentEmail": {
+      "title": "SentEmail",
+      "description": "Log of automated confirmation emails sent to registrants",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "to": { "type": "string" },
+        "subject": { "type": "string" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "to", "subject", "status", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/registrations/{registrationId}": {
+      "schema": "Registration",
+      "description": "Competition team and ambassador registrations"
+    },
+    "/settings/{settingId}": {
+      "schema": "Setting",
+      "description": "Platform customizations, pricing and module settings"
+    },
+    "/emails/{emailId}": {
+      "schema": "SentEmail",
+      "description": "Dispatched email records"
+    }
+  }
+}

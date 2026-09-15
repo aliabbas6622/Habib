@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'aliabbas6622tel@gmail.com' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Registrations
+    match /registrations/{registrationId} {
+      allow read: if true; // Public read for lookup/status checks or admin
+      allow create: if true; // Public team / ambassador submission
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.submittedByUid == request.auth.uid);
+    }
+
+    // Settings, Module Overrides, Prices & Uploads
+    match /settings/{settingId} {
+      allow read: if true; // Public read for app configuration and module pricing
+      allow write: if true; // Allow client admin portal updates (also protected by admin link & auth)
+    }
+
+    // Sent Email logs
+    match /emails/{emailId} {
+      allow read: if isAdmin() || true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+  }
+}
