@@ -15,7 +15,6 @@ import {
   Eye,
   DollarSign
 } from 'lucide-react';
-import { HURC_LOGO } from '../data/modulesData';
 import { TeamRegistrationData, AmbassadorRegistrationData } from '../types';
 import { useCompetition } from '../context/CompetitionContext';
 import { useAuth } from '../context/AuthContext';
@@ -33,7 +32,7 @@ export default function RegistrationPage({
   initialSelectedModuleId,
   onSaveRegistration
 }: RegistrationPageProps) {
-  const { modules, settings, saveRegistration, lastDispatchedEmail } = useCompetition();
+  const { modules, settings, saveRegistration, lastDispatchedEmail, logoUrl } = useCompetition();
   const { currentUser, userProfile } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'team' | 'ambassador'>('team');
@@ -313,7 +312,7 @@ export default function RegistrationPage({
     const recipientEmail = isTeam ? teamData.leader.email : ambData.email;
 
     return (
-      <div className="min-h-screen py-16 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto animate-in fade-in">
+      <div className="min-h-screen py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto animate-in fade-in">
         <div className="rounded-3xl bg-[#1a0f09] border border-orange-500/40 p-8 sm:p-12 shadow-[0_0_50px_rgba(249,115,22,0.2)] text-center">
           
           <div className="w-16 h-16 rounded-2xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 mx-auto mb-6">
@@ -324,7 +323,7 @@ export default function RegistrationPage({
             Registration Confirmed
           </span>
 
-          <h1 className="font-display text-3xl sm:text-4xl font-black uppercase text-white mt-4 tracking-wide">
+          <h1 className="font-display text-2xl sm:text-4xl font-black uppercase text-white mt-4 tracking-wide leading-tight">
             {isTeam ? 'Team Successfully Registered!' : 'Ambassador Application Received!'}
           </h1>
 
@@ -333,13 +332,13 @@ export default function RegistrationPage({
           </p>
 
           {/* Email Dispatched Alert Card (wording reflects true delivery status) */}
-          <div className="mt-6 p-4 rounded-2xl bg-[#22130b] border border-orange-500/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
-            <div className="flex items-center gap-3">
+          <div className="mt-6 p-4 rounded-2xl bg-[#22130b] border border-orange-500/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left">
+            <div className="flex items-start sm:items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-orange-600/20 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
                 <Mail className="w-5 h-5" />
               </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+              <div className="min-w-0">
+                <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 flex-wrap">
                   {lastDispatchedEmail?.status === 'Delivered' ? (
                     <>
                       <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -385,45 +384,45 @@ export default function RegistrationPage({
           </div>
 
           {/* Summary Details */}
-          <div className="mt-8 text-left rounded-2xl bg-[#140a06] border border-amber-950/80 p-6 space-y-3 text-sm">
+          <div className="mt-8 text-left rounded-2xl bg-[#140a06] border border-amber-950/80 p-5 sm:p-6 space-y-3 text-sm">
             {isTeam ? (
               <>
-                <div className="flex justify-between border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400">Team Name:</span>
-                  <span className="font-bold text-white">{teamData.teamName}</span>
+                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
+                  <span className="text-stone-400 shrink-0">Team Name:</span>
+                  <span className="font-bold text-white text-right break-words min-w-0">{teamData.teamName}</span>
                 </div>
-                <div className="flex justify-between border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400">Modules:</span>
-                  <span className="font-semibold text-orange-400">
+                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
+                  <span className="text-stone-400 shrink-0">Modules:</span>
+                  <span className="font-semibold text-orange-400 text-right break-words min-w-0">
                     {teamData.selectedModules.map(m => modules.find(mod => mod.id === m)?.shortTitle || m).join(', ')}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400">Team Leader:</span>
-                  <span className="font-medium text-stone-200">{teamData.leader.fullName}</span>
+                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
+                  <span className="text-stone-400 shrink-0">Team Leader:</span>
+                  <span className="font-medium text-stone-200 text-right break-words min-w-0">{teamData.leader.fullName}</span>
                 </div>
-                <div className="flex justify-between border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400">Leader Email:</span>
-                  <span className="font-medium text-stone-200">{teamData.leader.email}</span>
+                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
+                  <span className="text-stone-400 shrink-0">Leader Email:</span>
+                  <span className="font-medium text-stone-200 text-right break-all min-w-0">{teamData.leader.email}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-stone-400">Total Members:</span>
-                  <span className="font-semibold text-stone-200">{teamData.memberCount} Members</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-stone-400 shrink-0">Total Members:</span>
+                  <span className="font-semibold text-stone-200 text-right">{teamData.memberCount} Members</span>
                 </div>
               </>
             ) : (
               <>
-                <div className="flex justify-between border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400">Applicant:</span>
-                  <span className="font-bold text-white">{ambData.fullName}</span>
+                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
+                  <span className="text-stone-400 shrink-0">Applicant:</span>
+                  <span className="font-bold text-white text-right break-words min-w-0">{ambData.fullName}</span>
                 </div>
-                <div className="flex justify-between border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400">Institution:</span>
-                  <span className="font-semibold text-orange-400">{ambData.university}</span>
+                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
+                  <span className="text-stone-400 shrink-0">Institution:</span>
+                  <span className="font-semibold text-orange-400 text-right break-words min-w-0">{ambData.university}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-stone-400">Contact Email:</span>
-                  <span className="font-medium text-stone-200">{ambData.email}</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-stone-400 shrink-0">Contact Email:</span>
+                  <span className="font-medium text-stone-200 text-right break-all min-w-0">{ambData.email}</span>
                 </div>
               </>
             )}
@@ -461,7 +460,7 @@ export default function RegistrationPage({
 
   // MAIN REGISTRATION FORM (Matches Screenshot 2)
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+    <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
       
       {/* Back to Home Button */}
       <div className="mb-6">
@@ -477,9 +476,9 @@ export default function RegistrationPage({
 
       {/* Header with Circular Badge */}
       <div className="text-center mb-8 flex flex-col items-center">
-        <div className="w-20 h-20 rounded-full p-1 bg-[#1b1009] border-2 border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.25)] mb-3">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-[#1b1009] border-2 border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.25)] mb-3">
           <img 
-            src={HURC_LOGO} 
+            src={logoUrl} 
             alt="HURC Logo" 
             className="w-full h-full object-cover rounded-full"
             referrerPolicy="no-referrer"
@@ -490,7 +489,7 @@ export default function RegistrationPage({
           HURC 2026 Registration Portal
         </span>
 
-        <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black uppercase text-white tracking-wide">
+        <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-black uppercase text-white tracking-wide leading-tight">
           {activeTab === 'team' ? 'COMPETITION TEAM REGISTRATION' : 'CAMPUS AMBASSADOR REGISTRATION'}
         </h1>
 
@@ -500,34 +499,38 @@ export default function RegistrationPage({
             : 'Apply to become an official HURC 2026 Campus Ambassador for your institute, college, or university.'}
         </p>
 
-        {/* Tab Switcher */}
-        <div className="mt-6 flex rounded-xl bg-[#180e08] p-1.5 border border-amber-950/80 shadow-inner">
+        {/* Tab Switcher — full width and never wider than the viewport, with the
+            long "3-5 Members" hint dropped on the narrowest screens. */}
+        <div className="mt-6 w-full sm:w-auto grid grid-cols-2 sm:flex rounded-xl bg-[#180e08] p-1.5 border border-amber-950/80 shadow-inner">
           <button
             type="button"
             id="tab-team-btn"
             onClick={() => setActiveTab('team')}
-            className={`px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
+            className={`min-w-0 px-2.5 sm:px-5 py-2.5 rounded-lg text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${
               activeTab === 'team'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md'
                 : 'text-stone-400 hover:text-white'
             }`}
           >
-            <Users className="w-4 h-4" />
-            <span>Competition Team (3-5 Members)</span>
+            <Users className="w-4 h-4 shrink-0" />
+            <span className="truncate">
+              Competition Team
+              <span className="hidden sm:inline"> (3-5 Members)</span>
+            </span>
           </button>
 
           <button
             type="button"
             id="tab-ambassador-btn"
             onClick={() => setActiveTab('ambassador')}
-            className={`px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
+            className={`min-w-0 px-2.5 sm:px-5 py-2.5 rounded-lg text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${
               activeTab === 'ambassador'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md'
                 : 'text-stone-400 hover:text-white'
             }`}
           >
-            <GraduationCap className="w-4 h-4" />
-            <span>Campus Ambassador</span>
+            <GraduationCap className="w-4 h-4 shrink-0" />
+            <span className="truncate">Campus Ambassador</span>
           </button>
         </div>
       </div>
@@ -569,24 +572,24 @@ export default function RegistrationPage({
                     key={mod.id}
                     id={`checkbox-mod-${mod.id}`}
                     onClick={() => handleToggleModule(mod.id)}
-                    className={`p-3.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                    className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all ${
                       isSelected
                         ? 'bg-[#29160c] border-orange-500/70 shadow-[0_0_15px_rgba(249,115,22,0.15)]'
                         : 'bg-[#150c07] border-amber-950/70 hover:border-amber-800/80 hover:bg-[#1d1009]'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       {isSelected ? (
                         <CheckSquare className="w-5 h-5 text-orange-500 shrink-0" />
                       ) : (
                         <Square className="w-5 h-5 text-stone-600 shrink-0" />
                       )}
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-stone-200">
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-semibold text-stone-200 leading-snug">
                           {mod.title}
                         </span>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs font-bold text-orange-400">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
+                          <span className="text-xs font-bold text-orange-400 whitespace-nowrap">
                             PKR {mod.registrationFeePKR.toLocaleString()}
                           </span>
                           {mod.isStandalone && (
@@ -599,7 +602,7 @@ export default function RegistrationPage({
                     </div>
 
                     {!mod.isOpen && (
-                      <span className="text-[10px] font-bold text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-900">
+                      <span className="text-[10px] font-bold text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-900 shrink-0">
                         WAITLIST
                       </span>
                     )}

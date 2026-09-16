@@ -59,8 +59,8 @@ export default function AuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md rounded-3xl bg-[#180e08] border border-amber-900/60 shadow-2xl overflow-hidden p-6 sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+      <div className="relative w-full max-w-md my-auto max-h-[calc(100dvh-1.5rem)] overflow-y-auto rounded-3xl bg-[#180e08] border border-amber-900/60 shadow-2xl p-5 sm:p-8">
         
         {/* Close button */}
         <button
@@ -71,11 +71,11 @@ export default function AuthModal() {
         </button>
 
         {/* Modal Header */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-5 sm:mb-6">
           <div className="w-12 h-12 rounded-2xl bg-orange-600/20 border border-orange-500/40 flex items-center justify-center text-orange-400 mx-auto mb-3 shadow-[0_0_20px_rgba(249,115,22,0.3)]">
             <Lock className="w-6 h-6" />
           </div>
-          <h2 className="font-display text-2xl font-black uppercase text-white tracking-wide">
+          <h2 className="font-display text-xl sm:text-2xl font-black uppercase text-white tracking-wide">
             {isSignUp ? 'Create HURC Account' : 'Sign In to HURC 2026'}
           </h2>
           <p className="text-xs text-stone-400 mt-1">
@@ -86,7 +86,7 @@ export default function AuthModal() {
         </div>
 
         {/* Tabs */}
-        <div className="flex rounded-xl bg-[#120904] p-1 border border-amber-950/80 mb-6">
+        <div className="flex rounded-xl bg-[#120904] p-1 border border-amber-950/80 mb-5 sm:mb-6">
           <button
             type="button"
             onClick={() => { setError(null); openAuthModal('signin'); }}

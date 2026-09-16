@@ -5,12 +5,15 @@
     font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: #0d0805;
     color: #fef3c7;
+    /* Never allow a wide child (long URLs, tables, blobs) to create a sideways scroll */
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, .font-display {
     font-family: 'Chakra Petch', 'Rajdhani', sans-serif;
     letter-spacing: -0.01em;
   }
+
 }
 
 /* Custom ember glow utilities */
@@ -24,4 +27,54 @@
 
 .text-glow {
   text-shadow: 0 0 12px rgba(249, 115, 22, 0.6);
+}
+
+/* Horizontally scrollable tab bars stay swipeable without a visible scrollbar */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
+ * The project uses `animate-in` / `fade-in` / `slide-in-from-top-2` classes
+ * (tailwindcss-animate naming) without the plugin installed, so those class
+ * names previously did nothing. Define them here so entrance animations work.
+ */
+@keyframes hurc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes hurc-enter-from-top {
+  from { opacity: 0; transform: translateY(-0.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hurc-zoom-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@layer utilities {
+  .animate-in {
+    animation: hurc-fade-in var(--tw-duration, 0.22s) cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-in.slide-in-from-top-2 {
+    animation-name: hurc-enter-from-top;
+  }
+
+  .animate-in.zoom-in-95 {
+    animation-name: hurc-zoom-in;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-in {
+      animation: none;
+    }
+  }
 }

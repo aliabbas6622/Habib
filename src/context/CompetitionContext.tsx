@@ -1,14 +1,15 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  getDocs, 
-  onSnapshot 
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  onSnapshot,
+  deleteDoc
 } from 'firebase/firestore';
 import { db, testFirestoreConnection } from '../lib/firebase';
-import { COMPETITION_MODULES } from '../data/modulesData';
+import { COMPETITION_MODULES, HURC_LOGO } from '../data/modulesData';
 import { CompetitionModule, TeamRegistrationData, AmbassadorRegistrationData } from '../types';
 import { sendRegistrationConfirmationEmail, DispatchedEmail, getDispatchedEmails } from '../lib/emailService';
 
@@ -21,14 +22,32 @@ export interface ModulePricing {
   isOpen: boolean;
 }
 
+export interface ModuleCustomAsset {
+  /**
+   * External image URL (small string). Uploaded files live in the `assets`
+   * collection. `null` explicitly clears the value in Firestore (a `merge`
+   * write cannot delete a key by passing `undefined`).
+   */
+  customBannerUrl?: string | null;
+  customRulebookFileName?: string;
+  /** External rulebook URL (recommended for real PDFs, which are usually > 1 MB). */
+  customRulebookUrl?: string | null;
+  customRulebookSize?: string;
+  customRulebookUpdatedAt?: string;
+}
+
 export interface CompetitionSettings {
   announcementText: string;
   countdownTargetDate: string;
   adminSecretToken: string;
+  /** Organizer login ID required at the admin gate (an authorized organizer email). */
+  adminLoginId: string;
   portalCustomUrl: string;
   contactEmail: string;
   earlyBirdDiscountPercent: number;
   droneWorkshopStandaloneStrict: boolean;
+  /** External brand logo URL. Uploaded logos live in the `assets` collection. */
+  logoUrl?: string | null;
   // Email delivery (Gmail SMTP via /api/send-email Vercel function).
   // NOTE: smtpPassword is intentionally NOT persisted to Firestore (public doc).
   // It lives only in Vercel env vars: HURC_SMTP_EMAIL / HURC_SMTP_PASSWORD.
@@ -36,18 +55,17 @@ export interface CompetitionSettings {
   smtpPasswordConfigured?: boolean;
   smtpFromName?: string;
   pricings: Record<string, ModulePricing>;
-  moduleCustomAssets: Record<string, {
-    customBannerUrl?: string;
-    customRulebookFileName?: string;
-    customRulebookUrl?: string;
-    customRulebookSize?: string;
-  }>;
+  moduleCustomAssets: Record<string, ModuleCustomAsset>;
 }
+
+export const DEFAULT_ADMIN_LOGIN_ID = 'hurc3426@gmail.com';
+export const DEFAULT_ADMIN_SECRET_TOKEN = 'hurc2026_super_admin';
 
 const DEFAULT_SETTINGS: CompetitionSettings = {
   announcementText: 'HURC 2026 • Habib University Robotics Competition',
   countdownTargetDate: '2026-12-28T09:00:00',
-  adminSecretToken: 'hurc2026_super_admin',
+  adminSecretToken: DEFAULT_ADMIN_SECRET_TOKEN,
+  adminLoginId: DEFAULT_ADMIN_LOGIN_ID,
   portalCustomUrl: 'admin-portal-hurc-secure-auth',
   contactEmail: 'hurc.support@habib.edu.pk',
   earlyBirdDiscountPercent: 0,
@@ -60,28 +78,107 @@ const DEFAULT_SETTINGS: CompetitionSettings = {
     'autonomous-navigation': { moduleId: 'autonomous-navigation', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 100,000 Cash Prize', prizeSecondPKR: 'PKR 50,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
     'drone-workshop': { moduleId: 'drone-workshop', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 70,000 Drone Kit & Trophy', prizeSecondPKR: 'PKR 35,000 High-Torque ESC Kit', prizeThirdPKR: 'Special FPV Goggles Kit', isOpen: true }
   },
-  moduleCustomAssets: {
-    'drone-workshop': {
-      customRulebookFileName: 'drone-workshop-rulebook-official-2026.pdf',
-      customRulebookSize: '352 KB'
-    }
-  }
+  moduleCustomAssets: {}
 };
+
+/**
+ * Binary-ish assets (module banners, rulebook PDFs, the brand logo) are stored as
+ * ONE document per asset inside the EXISTING `settings` collection, using an
+ * `asset__` id prefix — never inside the shared `settings/competition_config`
+ * document. Firestore caps a document at ~1 MiB, so keeping base64 payloads out of
+ * the config document stops one large upload from silently breaking every other
+ * settings write. This reuses the already-deployed /settings rules, so no rules
+ * deploy is required to fix the problem.
+ */
+const ASSET_DOC_PREFIX = 'asset__';
+
+const ASSET_KEYS = {
+  logo: 'site-logo',
+  banner: (moduleId: string) => `module-banner-${moduleId}`,
+  rulebook: (moduleId: string) => `module-rulebook-${moduleId}`
+};
+
+// Fixed set of asset documents that may exist, so boot only reads what could be there
+const ASSET_KEY_LIST = [
+  ASSET_KEYS.logo,
+  ...COMPETITION_MODULES.map(m => ASSET_KEYS.banner(m.id)),
+  ...COMPETITION_MODULES.map(m => ASSET_KEYS.rulebook(m.id))
+];
+
+const assetDocRef = (key: string) => doc(db, 'settings', `${ASSET_DOC_PREFIX}${key}`);
+
+const ASSET_LOCAL_CACHE = 'hurc_2026_asset_blobs';
+export const REGISTRATIONS_LOCAL_CACHE = 'hurc_2026_registrations';
+
+/**
+ * Firestore's per-document limit is 1 MiB and base64 inflates a file by ~33%,
+ * so ~700 KB is the real ceiling for an inline upload.
+ */
+export const MAX_ASSET_UPLOAD_KB = 700;
+const MAX_ASSET_UPLOAD_BYTES = MAX_ASSET_UPLOAD_KB * 1024;
+
+export function isOversizedUpload(file: File) {
+  return file.size > MAX_ASSET_UPLOAD_BYTES;
+}
+
+export function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** Firestore rejects `undefined` field values outright, so strip them before writing. */
+function sanitizeForFirestore<T>(value: T): T {
+  if (Array.isArray(value)) return value.map(item => sanitizeForFirestore(item)) as unknown as T;
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    Object.entries(value as Record<string, unknown>).forEach(([key, val]) => {
+      if (val === undefined) return;
+      out[key] = sanitizeForFirestore(val);
+    });
+    return out as T;
+  }
+  return value;
+}
+
+function readLocalAssets(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(ASSET_LOCAL_CACHE);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed;
+    }
+  } catch {}
+  return {};
+}
+
+export interface ClearRegistrationsResult {
+  deleted: number;
+  failed: number;
+}
 
 interface CompetitionContextType {
   settings: CompetitionSettings;
   modules: CompetitionModule[];
+  /** Brand logo: uploaded asset, then external URL, then bundled default. */
+  logoUrl: string;
   registrations: (TeamRegistrationData | AmbassadorRegistrationData)[];
   sentEmails: DispatchedEmail[];
   lastDispatchedEmail: DispatchedEmail | null;
+  /** Non-blocking warning shown in the admin portal when a cloud write fails. */
+  cloudSyncWarning: string | null;
+  clearCloudSyncWarning: () => void;
   clearLastDispatchedEmail: () => void;
   updateSettings: (newSettings: Partial<CompetitionSettings>) => Promise<void>;
   updateModulePricing: (moduleId: string, pricing: Partial<ModulePricing>) => Promise<void>;
-  updateModuleAssets: (moduleId: string, assets: { customBannerUrl?: string; customRulebookFileName?: string; customRulebookUrl?: string; customRulebookSize?: string }) => Promise<void>;
+  updateModuleAssets: (moduleId: string, assets: ModuleCustomAsset) => Promise<void>;
+  updateLogo: (dataUrl: string | null) => Promise<void>;
+  uploadModuleBanner: (moduleId: string, dataUrl: string) => Promise<void>;
+  uploadModuleRulebook: (moduleId: string, dataUrl: string, fileName: string, sizeLabel: string) => Promise<void>;
   saveRegistration: (data: TeamRegistrationData | AmbassadorRegistrationData) => Promise<DispatchedEmail>;
   updateRegistrationStatus: (id: string, status: string) => Promise<void>;
   resendEmailForRegistration: (id: string) => Promise<DispatchedEmail | null>;
-  clearRegistrations: () => Promise<void>;
+  clearRegistrations: () => Promise<ClearRegistrationsResult>;
 }
 
 const CompetitionContext = createContext<CompetitionContextType | undefined>(undefined);
@@ -98,70 +195,213 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
   const [registrations, setRegistrations] = useState<(TeamRegistrationData | AmbassadorRegistrationData)[]>(() => {
     // Only hydrate this device's locally cached registrations; never seed demo data to visitors
     try {
-      const saved = localStorage.getItem('hurc_2026_registrations');
+      const saved = localStorage.getItem(REGISTRATIONS_LOCAL_CACHE);
       if (saved) return JSON.parse(saved);
     } catch {}
     return [];
   });
 
+  const [assetBlobs, setAssetBlobs] = useState<Record<string, string>>(() => readLocalAssets());
   const [sentEmails, setSentEmails] = useState<DispatchedEmail[]>([]);
   const [lastDispatchedEmail, setLastDispatchedEmail] = useState<DispatchedEmail | null>(null);
+  const [cloudSyncWarning, setCloudSyncWarning] = useState<string | null>(null);
+
+  // Mirror of settings so async handlers always merge onto the latest value
+  const settingsRef = useRef(settings);
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
+
+  const persistAssetLocally = (key: string, dataUrl: string | null) => {
+    setAssetBlobs(prev => {
+      const next = { ...prev };
+      if (dataUrl) next[key] = dataUrl;
+      else delete next[key];
+      try {
+        localStorage.setItem(ASSET_LOCAL_CACHE, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const writeAssetDoc = async (key: string, dataUrl: string | null, notifyUser = true) => {
+    try {
+      if (dataUrl) {
+        await setDoc(assetDocRef(key), { dataUrl, updatedAt: new Date().toISOString() });
+      } else {
+        await deleteDoc(assetDocRef(key));
+      }
+      return true;
+    } catch (e) {
+      console.warn('Asset kept on this device only (cloud write failed):', e);
+      if (notifyUser) {
+        setCloudSyncWarning(
+          'That file is saved on this device but could not be uploaded to the cloud database. Please check your connection and try again.'
+        );
+      }
+      return false;
+    }
+  };
+
+  const putAsset = async (key: string, dataUrl: string) => {
+    persistAssetLocally(key, dataUrl);
+    return writeAssetDoc(key, dataUrl);
+  };
+
+  const removeAsset = async (key: string) => {
+    persistAssetLocally(key, null);
+    return writeAssetDoc(key, null);
+  };
+
+  const updateSettings = async (newSettings: Partial<CompetitionSettings>) => {
+    const merged = { ...settingsRef.current, ...newSettings };
+    settingsRef.current = merged;
+    setSettings(merged);
+    try {
+      localStorage.setItem('hurc_settings', JSON.stringify(merged));
+    } catch {}
+
+    try {
+      await setDoc(doc(db, 'settings', 'competition_config'), sanitizeForFirestore(merged), { merge: true });
+      setCloudSyncWarning(null);
+    } catch (e) {
+      console.warn('Saved settings locally, Firestore save skipped:', e);
+      setCloudSyncWarning('Settings were saved on this device but could not be synced to the cloud database.');
+    }
+  };
+
+  /**
+   * Moves any legacy inline `data:` payloads that older versions wrote into the
+   * settings document out into the `assets` collection. This keeps the shared
+   * settings document small enough to keep saving.
+   */
+  const migrateInlineAssets = async (loaded: CompetitionSettings) => {
+    const assets: Record<string, ModuleCustomAsset> = { ...(loaded.moduleCustomAssets || {}) };
+    let changed = false;
+
+    for (const moduleId of Object.keys(assets)) {
+      const entry = assets[moduleId] || {};
+      if (entry.customBannerUrl && entry.customBannerUrl.startsWith('data:')) {
+        // Only strip the inline copy once the dedicated asset document is safely stored
+        const stored = await putAsset(ASSET_KEYS.banner(moduleId), entry.customBannerUrl);
+        if (stored) {
+          assets[moduleId] = { ...(assets[moduleId] || {}), customBannerUrl: null };
+          changed = true;
+        }
+      }
+
+      const afterBanner = assets[moduleId] || {};
+      if (afterBanner.customRulebookUrl && afterBanner.customRulebookUrl.startsWith('data:')) {
+        const stored = await putAsset(ASSET_KEYS.rulebook(moduleId), afterBanner.customRulebookUrl);
+        if (stored) {
+          assets[moduleId] = { ...afterBanner, customRulebookUrl: null };
+          changed = true;
+        }
+      }
+    }
+
+    let logoUrl = loaded.logoUrl;
+    if (logoUrl && logoUrl.startsWith('data:')) {
+      const stored = await putAsset(ASSET_KEYS.logo, logoUrl);
+      if (stored) {
+        logoUrl = null;
+        changed = true;
+      }
+    }
+
+    if (!changed) return;
+    await updateSettings({ moduleCustomAssets: assets, logoUrl });
+  };
 
   // Initialize connection and sync Firestore
   useEffect(() => {
     testFirestoreConnection();
+
+    const loadAssets = async () => {
+      try {
+        const snapshots = await Promise.all(
+          ASSET_KEY_LIST.map(key =>
+            getDoc(assetDocRef(key)).then(snap => ({ key, snap })).catch(() => null)
+          )
+        );
+        const remote: Record<string, string> = {};
+        snapshots.forEach(entry => {
+          if (!entry || !entry.snap.exists()) return;
+          const data = entry.snap.data() as { dataUrl?: string };
+          if (typeof data?.dataUrl === 'string') remote[entry.key] = data.dataUrl;
+        });
+        if (Object.keys(remote).length === 0) return;
+        setAssetBlobs(prev => {
+          const next = { ...prev, ...remote };
+          try {
+            localStorage.setItem(ASSET_LOCAL_CACHE, JSON.stringify(next));
+          } catch {}
+          return next;
+        });
+      } catch (e) {
+        console.warn('Using local asset cache:', e);
+      }
+    };
 
     // Sync settings from Firestore
     const syncSettings = async () => {
       try {
         const snap = await getDoc(doc(db, 'settings', 'competition_config'));
         if (snap.exists()) {
-          setSettings(prev => ({ ...prev, ...(snap.data() as CompetitionSettings) }));
+          const remote = snap.data() as Partial<CompetitionSettings>;
+          const merged = { ...DEFAULT_SETTINGS, ...remote };
+          settingsRef.current = merged;
+          setSettings(merged);
+          try {
+            localStorage.setItem('hurc_settings', JSON.stringify(merged));
+          } catch {}
+          await migrateInlineAssets(merged);
         }
       } catch (e) {
         console.warn('Using local settings cache:', e);
       }
     };
+
+    loadAssets();
     syncSettings();
 
     // Listen to registrations in Firestore
+    let unsub: (() => void) | undefined;
     try {
-      const unsub = onSnapshot(collection(db, 'registrations'), (snapshot) => {
-        if (!snapshot.empty) {
+      unsub = onSnapshot(
+        collection(db, 'registrations'),
+        (snapshot) => {
           const list: (TeamRegistrationData | AmbassadorRegistrationData)[] = [];
           snapshot.forEach(docSnap => {
             list.push(docSnap.data() as any);
           });
           // sort latest first
           list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          // Reflect the cloud collection exactly, including when it is emptied
+          // by "Clear Database" — otherwise cleared rows reappear on refresh.
           setRegistrations(list);
-          localStorage.setItem('hurc_2026_registrations', JSON.stringify(list));
+          try {
+            localStorage.setItem(REGISTRATIONS_LOCAL_CACHE, JSON.stringify(list));
+          } catch {}
+        },
+        (error) => {
+          console.warn('Realtime registrations listener inactive:', error);
         }
-      });
-      return () => unsub();
+      );
     } catch (e) {
       console.warn('Realtime registrations listener inactive:', e);
     }
 
     // Load emails
     getDispatchedEmails().then(emails => setSentEmails(emails));
+
+    return () => {
+      if (unsub) unsub();
+    };
   }, []);
 
-  // Save settings updates
-  const updateSettings = async (newSettings: Partial<CompetitionSettings>) => {
-    const updated = { ...settings, ...newSettings };
-    setSettings(updated);
-    localStorage.setItem('hurc_settings', JSON.stringify(updated));
-
-    try {
-      await setDoc(doc(db, 'settings', 'competition_config'), updated, { merge: true });
-    } catch (e) {
-      console.warn('Saved settings locally, Firestore save skipped:', e);
-    }
-  };
-
   const updateModulePricing = async (moduleId: string, pricing: Partial<ModulePricing>) => {
-    const existing = settings.pricings[moduleId] || {
+    const existing = settingsRef.current.pricings[moduleId] || {
       moduleId,
       registrationFeePKR: 3500,
       prizeFirstPKR: 'PKR 100,000 Cash',
@@ -170,22 +410,50 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       isOpen: true
     };
     const updatedPricings = {
-      ...settings.pricings,
+      ...settingsRef.current.pricings,
       [moduleId]: { ...existing, ...pricing }
     };
     await updateSettings({ pricings: updatedPricings });
   };
 
-  const updateModuleAssets = async (
-    moduleId: string, 
-    assets: { customBannerUrl?: string; customRulebookFileName?: string; customRulebookUrl?: string; customRulebookSize?: string }
-  ) => {
-    const existing = settings.moduleCustomAssets[moduleId] || {};
+  const updateModuleAssets = async (moduleId: string, assets: ModuleCustomAsset) => {
+    const existing = settingsRef.current.moduleCustomAssets[moduleId] || {};
     const updatedAssets = {
-      ...settings.moduleCustomAssets,
-      [moduleId]: { ...existing, ...assets }
+      ...settingsRef.current.moduleCustomAssets,
+      [moduleId]: { ...existing, ...assets, customRulebookUpdatedAt: new Date().toISOString() }
     };
     await updateSettings({ moduleCustomAssets: updatedAssets });
+  };
+
+  /** Uploads a module banner image file (stored as its own `assets` document). */
+  const uploadModuleBanner = async (moduleId: string, dataUrl: string) => {
+    await putAsset(ASSET_KEYS.banner(moduleId), dataUrl);
+  };
+
+  /** Uploads a rulebook file (stored as its own `assets` document). */
+  const uploadModuleRulebook = async (moduleId: string, dataUrl: string, fileName: string, sizeLabel: string) => {
+    await putAsset(ASSET_KEYS.rulebook(moduleId), dataUrl);
+    await updateModuleAssets(moduleId, {
+      customRulebookFileName: fileName,
+      customRulebookSize: sizeLabel
+    });
+  };
+
+  /** Sets (or clears) the brand logo used in the navbar, footer and hero. */
+  const updateLogo = async (dataUrl: string | null) => {
+    if (!dataUrl) {
+      await removeAsset(ASSET_KEYS.logo);
+      // `null` (not `undefined`) so the merge write actually clears the stored URL
+      await updateSettings({ logoUrl: null });
+      return;
+    }
+    if (dataUrl.startsWith('data:')) {
+      await putAsset(ASSET_KEYS.logo, dataUrl);
+    } else {
+      // External URL: cheap to keep alongside the regular settings
+      await removeAsset(ASSET_KEYS.logo);
+      await updateSettings({ logoUrl: dataUrl });
+    }
   };
 
   // Submit and save new registration + trigger automated email
@@ -195,7 +463,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
     if (data.type === 'team') {
       const team = data as TeamRegistrationData;
       team.selectedModules.forEach(modId => {
-        const p = settings.pricings[modId];
+        const p = settingsRef.current.pricings[modId];
         calculatedFee += p ? p.registrationFeePKR : 3500;
       });
     }
@@ -206,35 +474,46 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
     setSentEmails(prev => [dispatched, ...prev]);
 
     // 3. Update local registrations state
-    setRegistrations(prev => [data, ...prev]);
-    try {
-      const currentList = JSON.parse(localStorage.getItem('hurc_2026_registrations') || '[]');
-      localStorage.setItem('hurc_2026_registrations', JSON.stringify([data, ...currentList]));
-    } catch {}
+    setRegistrations(prev => {
+      const next = [data, ...prev.filter(item => item.id !== data.id)];
+      try {
+        localStorage.setItem(REGISTRATIONS_LOCAL_CACHE, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
 
     // 4. Save to Firestore
     try {
-      await setDoc(doc(db, 'registrations', data.id), {
-        ...data,
-        calculatedFeePKR: calculatedFee,
-        dispatchedEmailId: dispatched.id,
-        createdAt: new Date().toISOString()
-      });
+      await setDoc(
+        doc(db, 'registrations', data.id),
+        sanitizeForFirestore({
+          ...data,
+          calculatedFeePKR: calculatedFee,
+          dispatchedEmailId: dispatched.id,
+          createdAt: new Date().toISOString()
+        })
+      );
     } catch (e) {
       console.warn('Saved registration locally, Firestore write skipped:', e);
+      setCloudSyncWarning('A registration was saved on this device but could not be synced to the cloud database.');
     }
 
     return dispatched;
   };
 
   const updateRegistrationStatus = async (id: string, status: string) => {
-    setRegistrations(prev =>
-      prev.map(item => (item.id === id ? { ...item, status: status as any } : item))
-    );
+    setRegistrations(prev => {
+      const next = prev.map(item => (item.id === id ? { ...item, status: status as any } : item));
+      try {
+        localStorage.setItem(REGISTRATIONS_LOCAL_CACHE, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
     try {
       await setDoc(doc(db, 'registrations', id), { status }, { merge: true });
     } catch (e) {
       console.warn('Updated status locally:', e);
+      setCloudSyncWarning('That approval was saved on this device but could not be synced to the cloud database.');
     }
   };
 
@@ -244,26 +523,63 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
     let fee = 3500;
     if (target.type === 'team') {
       const team = target as TeamRegistrationData;
-      fee = team.selectedModules.reduce((acc, m) => acc + (settings.pricings[m]?.registrationFeePKR || 3500), 0);
+      fee = team.selectedModules.reduce((acc, m) => acc + (settingsRef.current.pricings[m]?.registrationFeePKR || 3500), 0);
     }
     const sent = await sendRegistrationConfirmationEmail(target, fee);
     setSentEmails(prev => [sent, ...prev]);
     return sent;
   };
 
-  const clearRegistrations = async () => {
+  /**
+   * Wipes registrations from BOTH this device and the cloud database. Deleting only
+   * locally used to make everything reappear on the next refresh, because the
+   * realtime listener re-read the untouched Firestore collection.
+   */
+  const clearRegistrations = async (): Promise<ClearRegistrationsResult> => {
+    let deleted = 0;
+    let failed = 0;
+
+    try {
+      const snapshot = await getDocs(collection(db, 'registrations'));
+      const results = await Promise.allSettled(
+        snapshot.docs.map(docSnap => deleteDoc(doc(db, 'registrations', docSnap.id)))
+      );
+      results.forEach(result => {
+        if (result.status === 'fulfilled') deleted += 1;
+        else failed += 1;
+      });
+      console.log(`Cleared ${deleted} registration(s) from Firestore${failed ? `, ${failed} blocked` : ''}.`);
+    } catch (e) {
+      console.warn('Could not list cloud registrations:', e);
+      failed = registrations.length;
+    }
+
     setRegistrations([]);
-    localStorage.removeItem('hurc_2026_registrations');
+    try {
+      localStorage.removeItem(REGISTRATIONS_LOCAL_CACHE);
+    } catch {}
+
+    if (failed > 0) {
+      setCloudSyncWarning(
+        `${deleted} registration(s) deleted. ${failed} could not be removed from the cloud database — sign in with an authorized organizer account at the admin gate, then try again.`
+      );
+    } else {
+      setCloudSyncWarning(null);
+    }
+
+    return { deleted, failed };
   };
 
   // Merge default modules with admin custom pricing and uploaded assets
-  const dynamicModules = COMPETITION_MODULES.map(m => {
+  const dynamicModules: CompetitionModule[] = COMPETITION_MODULES.map(m => {
     const customPrice = settings.pricings[m.id];
-    const customAsset = settings.moduleCustomAssets[m.id];
+    const customAsset = settings.moduleCustomAssets[m.id] || {};
+    const bannerBlob = assetBlobs[ASSET_KEYS.banner(m.id)];
+    const rulebookBlob = assetBlobs[ASSET_KEYS.rulebook(m.id)];
 
     return {
       ...m,
-      image: customAsset?.customBannerUrl || m.image,
+      image: bannerBlob || customAsset.customBannerUrl || m.image,
       isOpen: customPrice ? customPrice.isOpen : true,
       registrationFeePKR: customPrice ? customPrice.registrationFeePKR : 3500,
       prizePool: {
@@ -272,24 +588,32 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
         secondPlace: customPrice?.prizeSecondPKR || m.prizePool.secondPlace,
         thirdPlace: customPrice?.prizeThirdPKR || m.prizePool.thirdPlace
       },
-      customRulebookFileName: customAsset?.customRulebookFileName || `${m.slug}-rulebook-official-2026.pdf`,
-      customRulebookUrl: customAsset?.customRulebookUrl,
-      customRulebookSize: customAsset?.customRulebookSize || '352 KB'
-    };
+      customRulebookFileName: customAsset.customRulebookFileName,
+      customRulebookUrl: rulebookBlob || customAsset.customRulebookUrl,
+      customRulebookSize: customAsset.customRulebookSize
+    } as CompetitionModule;
   });
+
+  const logoUrl = assetBlobs[ASSET_KEYS.logo] || settings.logoUrl || HURC_LOGO;
 
   return (
     <CompetitionContext.Provider
       value={{
         settings,
         modules: dynamicModules,
+        logoUrl,
         registrations,
         sentEmails,
         lastDispatchedEmail,
+        cloudSyncWarning,
+        clearCloudSyncWarning: () => setCloudSyncWarning(null),
         clearLastDispatchedEmail: () => setLastDispatchedEmail(null),
         updateSettings,
         updateModulePricing,
         updateModuleAssets,
+        updateLogo,
+        uploadModuleBanner,
+        uploadModuleRulebook,
         saveRegistration,
         updateRegistrationStatus,
         resendEmailForRegistration,
