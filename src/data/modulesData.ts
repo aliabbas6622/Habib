@@ -1,6 +1,6 @@
 import { CompetitionModule, TeamRegistrationData } from '../types';
 
-import hurcLogoImg from '../assets/images/hurc_logo_badge_1789497554394.jpg';
+import hurcLogoImg from '../assets/images/hurc_logo.png';
 import robowarsImg from '../assets/images/robowars_combat_1789497570448.jpg';
 import roboSoccerImg from '../assets/images/robo_soccer_pitch_1789497614322.jpg';
 import lfrImg from '../assets/images/line_follower_robot_1789497669616.jpg';
