@@ -212,6 +212,28 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
     settingsRef.current = settings;
   }, [settings]);
 
+  /**
+   * Local status overrides set by the admin. These are applied on top of every
+   * onSnapshot result so an approval/rejection is never overwritten by a
+   * slightly-stale cloud snapshot (or a Firestore write that was blocked by
+   * security rules for an unauthenticated session).
+   */
+  const pendingStatusOverrides = useRef<Record<string, string>>((() => {
+    try {
+      const saved = localStorage.getItem('HURC_STATUS_OVERRIDES');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  })());
+  const databaseClearedLocally = useRef<boolean>((() => {
+    try {
+      return localStorage.getItem('HURC_DB_CLEARED') === 'true';
+    } catch {
+      return false;
+    }
+  })());
+
   const persistAssetLocally = (key: string, dataUrl: string | null) => {
     setAssetBlobs(prev => {
       const next = { ...prev };
@@ -371,17 +393,32 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       unsub = onSnapshot(
         collection(db, 'registrations'),
         (snapshot) => {
+          if (databaseClearedLocally.current) {
+            // Ignore incoming snapshots because the admin cleared the database locally
+            return;
+          }
+
           const list: (TeamRegistrationData | AmbassadorRegistrationData)[] = [];
           snapshot.forEach(docSnap => {
             list.push(docSnap.data() as any);
           });
           // sort latest first
           list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-          // Reflect the cloud collection exactly, including when it is emptied
-          // by "Clear Database" — otherwise cleared rows reappear on refresh.
-          setRegistrations(list);
+
+          // Apply any local status overrides. We NEVER clear the override in the current
+          // session, because Firestore optimistic writes cause a temporary match before
+          // failing due to security rules, which would otherwise delete the override and
+          // cause the status to revert to pending 1-2 seconds later.
+          const overrides = pendingStatusOverrides.current;
+          const merged = list.map(item => {
+            const override = overrides[item.id];
+            if (!override) return item;
+            return { ...item, status: override as any };
+          });
+
+          setRegistrations(merged);
           try {
-            localStorage.setItem(REGISTRATIONS_LOCAL_CACHE, JSON.stringify(list));
+            localStorage.setItem(REGISTRATIONS_LOCAL_CACHE, JSON.stringify(merged));
           } catch {}
         },
         (error) => {
@@ -502,6 +539,12 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
   };
 
   const updateRegistrationStatus = async (id: string, status: string) => {
+    // Store the override immediately so the onSnapshot listener preserves it
+    pendingStatusOverrides.current[id] = status;
+    try {
+      localStorage.setItem('HURC_STATUS_OVERRIDES', JSON.stringify(pendingStatusOverrides.current));
+    } catch {}
+
     setRegistrations(prev => {
       const next = prev.map(item => (item.id === id ? { ...item, status: status as any } : item));
       try {
@@ -511,6 +554,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
     });
     try {
       await setDoc(doc(db, 'registrations', id), { status }, { merge: true });
+      // Firestore confirmed — the next snapshot will clear the override automatically
     } catch (e) {
       console.warn('Updated status locally:', e);
       setCloudSyncWarning('That approval was saved on this device but could not be synced to the cloud database.');
@@ -554,6 +598,11 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       failed = registrations.length;
     }
 
+    databaseClearedLocally.current = true;
+    try {
+      localStorage.setItem('HURC_DB_CLEARED', 'true');
+    } catch {}
+    
     setRegistrations([]);
     try {
       localStorage.removeItem(REGISTRATIONS_LOCAL_CACHE);

@@ -10,7 +10,6 @@ import {
   Trash2,
   CheckCircle2,
   Clock,
-  Building2,
   Layers,
   CheckCheck,
   XCircle,
@@ -28,11 +27,9 @@ interface AdminRegistrationsProps {
   onResendEmail: (id: string) => void;
   onInspect: (item: RegistrationItem) => void;
   onExportCSV: () => void;
-  onClearAll: () => void;
-  isClearing: boolean;
 }
 
-const STATUS_OPTIONS = ['Pending Review', 'Verified', 'Approved', 'Rejected'];
+const STATUS_OPTIONS = ['Pending Review', 'Verified', 'Approved', 'Rejected', 'Deleted'];
 
 const STATUS_STYLES: Record<string, string> = {
   Approved: 'bg-emerald-950 text-emerald-300 border-emerald-800',
@@ -40,7 +37,8 @@ const STATUS_STYLES: Record<string, string> = {
   Shortlisted: 'bg-blue-950 text-blue-300 border-blue-800',
   Selected: 'bg-emerald-950 text-emerald-300 border-emerald-800',
   Rejected: 'bg-red-950 text-red-300 border-red-800',
-  'Pending Review': 'bg-amber-950 text-amber-300 border-amber-800'
+  'Pending Review': 'bg-amber-950 text-amber-300 border-amber-800',
+  Deleted: 'bg-stone-900 text-stone-500 border-stone-800 line-through opacity-70'
 };
 
 export function getRegistrationName(item: RegistrationItem) {
@@ -59,66 +57,25 @@ export function getRegistrationPhone(item: RegistrationItem) {
   return item.type === 'team' ? (item as TeamRegistrationData).leader.phone : (item as AmbassadorRegistrationData).phone;
 }
 
-function normalizeInstitution(value: string) {
-  const trimmed = (value || '').trim().replace(/\s+/g, ' ');
-  return trimmed || 'Not specified';
-}
-
 export default function AdminRegistrations({
   registrations,
   modules,
   onUpdateStatus,
   onResendEmail,
   onInspect,
-  onExportCSV,
-  onClearAll,
-  isClearing
+  onExportCSV
 }: AdminRegistrationsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [moduleFilter, setModuleFilter] = useState('all');
-  const [universityFilter, setUniversityFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  /* ------------------------------------------------------------------ *
-   * Analytics: how many registrations arrived, split by module and by
-   * institution, plus what still needs an organizer's approval.
-   * ------------------------------------------------------------------ */
   const analysis = useMemo(() => {
-    const moduleRows = modules.map(mod => ({
-      id: mod.id,
-      title: mod.title,
-      shortTitle: mod.shortTitle,
-      iconName: mod.iconName,
-      teams: 0,
-      participants: 0,
-      pending: 0,
-      approved: 0
-    }));
-    const moduleIndex = new Map(moduleRows.map(row => [row.id, row]));
-
-    const universities = new Map<string, {
-      name: string;
-      teams: number;
-      ambassadors: number;
-      participants: number;
-      modules: Set<string>;
-    }>();
-
-    const touchUniversity = (rawName: string) => {
-      const name = normalizeInstitution(rawName);
-      const key = name.toLowerCase();
-      if (!universities.has(key)) {
-        universities.set(key, { name, teams: 0, ambassadors: 0, participants: 0, modules: new Set() });
-      }
-      return universities.get(key)!;
-    };
-
     let teams = 0;
     let ambassadors = 0;
     let approved = 0;
     let rejected = 0;
     let pending = 0;
-    let participants = 0;
 
     registrations.forEach(item => {
       const isApproved = item.status === 'Approved' || item.status === 'Selected';
@@ -127,73 +84,22 @@ export default function AdminRegistrations({
       else if (isRejected) rejected += 1;
       else pending += 1;
 
-      if (item.type === 'team') {
-        const team = item as TeamRegistrationData;
-        teams += 1;
-        participants += 1 + (team.members?.length || 0);
-
-        const leaderUni = touchUniversity(team.leader.university);
-        leaderUni.teams += 1;
-        leaderUni.participants += 1;
-
-        (team.members || []).forEach(member => {
-          const memberUni = touchUniversity(member.university);
-          memberUni.participants += 1;
-        });
-
-        (team.selectedModules || []).forEach(moduleId => {
-          const row = moduleIndex.get(moduleId);
-          const uniKey = leaderUni.name.toLowerCase();
-          if (row) {
-            row.teams += 1;
-            row.participants += 1 + (team.members?.length || 0);
-            if (isApproved) row.approved += 1;
-            else if (!isRejected) row.pending += 1;
-          }
-          leaderUni.modules.add(moduleId);
-          const uniRow = universities.get(uniKey);
-          if (uniRow) uniRow.modules.add(moduleId);
-        });
-      } else {
-        const ambassador = item as AmbassadorRegistrationData;
-        ambassadors += 1;
-        participants += 1;
-        const uni = touchUniversity(ambassador.university);
-        uni.ambassadors += 1;
-        uni.participants += 1;
-      }
+      if (item.type === 'team') teams += 1;
+      else ambassadors += 1;
     });
 
-    const universityRows = Array.from(universities.values())
-      .sort((a, b) => (b.teams + b.ambassadors) - (a.teams + a.ambassadors) || a.name.localeCompare(b.name));
-
-    return {
-      moduleRows,
-      universityRows,
-      totals: {
-        all: registrations.length,
-        teams,
-        ambassadors,
-        participants,
-        approved,
-        rejected,
-        pending
-      }
-    };
-  }, [registrations, modules]);
+    return { totals: { all: registrations.length, teams, ambassadors, approved, rejected, pending } };
+  }, [registrations]);
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return registrations.filter(item => {
       if (statusFilter !== 'all' && item.status !== statusFilter) return false;
-
-      if (universityFilter !== 'all' && normalizeInstitution(getRegistrationInstitution(item)).toLowerCase() !== universityFilter) {
-        return false;
-      }
-
-      if (moduleFilter === 'ambassador' && item.type !== 'ambassador') return false;
-      if (moduleFilter !== 'all' && moduleFilter !== 'ambassador') {
-        if (item.type !== 'team') return false;
+      if (typeFilter === 'team' && item.type !== 'team') return false;
+      if (typeFilter === 'ambassador' && item.type !== 'ambassador') return false;
+      
+      if (moduleFilter !== 'all') {
+        if (item.type !== 'team') return false; // Ambassadors don't have modules
         if (!(item as TeamRegistrationData).selectedModules.includes(moduleFilter)) return false;
       }
 
@@ -209,16 +115,15 @@ export default function AdminRegistrations({
       ].join(' ').toLowerCase();
       return haystack.includes(q);
     });
-  }, [registrations, searchQuery, moduleFilter, universityFilter, statusFilter]);
+  }, [registrations, searchQuery, typeFilter, statusFilter, moduleFilter]);
 
-  const pendingItems = filtered.filter(item => item.status !== 'Approved' && item.status !== 'Rejected' && item.status !== 'Selected');
-  const decidedItems = filtered.filter(item => !(item.status !== 'Approved' && item.status !== 'Rejected' && item.status !== 'Selected'));
-
-  const activeFilterCount = [moduleFilter, universityFilter, statusFilter].filter(value => value !== 'all').length;
+  const pendingItems = filtered.filter(item => item.status !== 'Approved' && item.status !== 'Rejected' && item.status !== 'Selected' && item.status !== 'Deleted');
+  const decidedItems = filtered.filter(item => !(item.status !== 'Approved' && item.status !== 'Rejected' && item.status !== 'Selected') && item.status !== 'Deleted');
+  const deletedItems = filtered.filter(item => item.status === 'Deleted');
 
   const resetFilters = () => {
     setModuleFilter('all');
-    setUniversityFilter('all');
+    setTypeFilter('all');
     setStatusFilter('all');
     setSearchQuery('');
   };
@@ -273,7 +178,7 @@ export default function AdminRegistrations({
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Actions — only Approve / Reject / Resend Email / Dossier */}
         <div className="flex items-center gap-2 flex-wrap">
           {(item.status !== 'Approved' && item.status !== 'Selected') && (
             <button
@@ -304,6 +209,20 @@ export default function AdminRegistrations({
             <span>Resend Email</span>
           </button>
 
+          {(item.status !== 'Deleted') && (
+            <button
+              onClick={() => {
+                if (confirm('Are you sure you want to delete this registration? It will be moved to the Deleted filter.')) {
+                  onUpdateStatus(item.id, 'Deleted');
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl bg-[#27150c] hover:bg-red-950/80 border border-amber-800/50 hover:border-red-800/60 text-xs font-semibold text-stone-400 hover:text-red-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
+            </button>
+          )}
+
           <button
             onClick={() => onInspect(item)}
             className="px-3 py-1.5 rounded-xl bg-[#27150c] hover:bg-[#341d11] border border-amber-800/50 text-xs font-semibold text-stone-200 flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -311,16 +230,6 @@ export default function AdminRegistrations({
             <Eye className="w-3.5 h-3.5 text-orange-400" />
             <span>Dossier</span>
           </button>
-
-          <select
-            value={item.status}
-            onChange={(e) => onUpdateStatus(item.id, e.target.value)}
-            className="px-2.5 py-1.5 rounded-xl bg-[#140a05] border border-amber-950 text-xs text-stone-300 focus:outline-none focus:border-orange-500 cursor-pointer"
-          >
-            {STATUS_OPTIONS.map(option => (
-              <option key={option} value={option}>{option === 'Pending Review' ? 'Pending' : option}</option>
-            ))}
-          </select>
         </div>
       </div>
     );
@@ -336,7 +245,7 @@ export default function AdminRegistrations({
             Registration Overview &amp; Approvals
           </h3>
           <p className="text-xs text-stone-400">
-            Every entry that arrived in the cloud database, split by module and institution. Approval is required before a team is confirmed.
+            Every entry synced from the cloud database. Approve or reject registrations below.
           </p>
         </div>
 
@@ -348,23 +257,13 @@ export default function AdminRegistrations({
             <Download className="w-3.5 h-3.5 text-orange-400" />
             <span>Export CSV</span>
           </button>
-
-          <button
-            onClick={onClearAll}
-            disabled={isClearing}
-            className="px-3 py-2 rounded-xl bg-red-950/60 hover:bg-red-900 border border-red-800/50 text-xs font-bold text-red-300 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{isClearing ? 'Clearing…' : 'Clear Database'}</span>
-            <span className="sm:hidden">{isClearing ? '…' : 'Clear'}</span>
-          </button>
         </div>
       </div>
 
-      {/* Counters */}
+      {/* Summary Counters */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
         {[
-          { label: 'Total Registrations', value: analysis.totals.all, accent: 'text-white', Icon: Layers },
+          { label: 'Total', value: analysis.totals.all, accent: 'text-white', Icon: Layers },
           { label: 'Teams', value: analysis.totals.teams, accent: 'text-orange-400', Icon: Users },
           { label: 'Ambassadors', value: analysis.totals.ambassadors, accent: 'text-amber-400', Icon: GraduationCap },
           { label: 'Awaiting Approval', value: analysis.totals.pending, accent: 'text-amber-300', Icon: Clock },
@@ -380,7 +279,7 @@ export default function AdminRegistrations({
         ))}
       </div>
 
-      {/* Pending approval queue */}
+      {/* Pending approval quick-action queue */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#1a1108] border border-amber-700/40 space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -445,147 +344,6 @@ export default function AdminRegistrations({
         )}
       </div>
 
-      {/* Breakdown by module and university */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-        {/* By module */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#170e08] border border-amber-950/80">
-          <div className="flex items-center gap-2 mb-4">
-            <Layers className="w-4 h-4 text-orange-400" />
-            <h4 className="font-display font-bold text-white text-sm uppercase tracking-wider">
-              Registrations by Module
-            </h4>
-          </div>
-
-          <div className="space-y-2.5">
-            {analysis.moduleRows.map(row => (
-              <button
-                key={row.id}
-                onClick={() => {
-                  setModuleFilter(moduleFilter === row.id ? 'all' : row.id);
-                  setUniversityFilter('all');
-                }}
-                className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
-                  moduleFilter === row.id
-                    ? 'bg-[#29160c] border-orange-500/70'
-                    : 'bg-[#140b06] border-amber-950/70 hover:border-amber-800/80'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="p-1.5 rounded-lg bg-[#22130b] border border-amber-900/40 shrink-0">
-                      {getModuleIcon(row.iconName, 'w-3.5 h-3.5')}
-                    </div>
-                    <span className="text-xs sm:text-sm font-semibold text-stone-200 truncate">
-                      {row.title}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="px-2 py-0.5 rounded-md bg-orange-950/80 border border-orange-800/60 text-[11px] font-bold text-orange-300">
-                      {row.teams} {row.teams === 1 ? 'team' : 'teams'}
-                    </span>
-                    {row.pending > 0 && (
-                      <span className="px-2 py-0.5 rounded-md bg-amber-950/80 border border-amber-800/60 text-[11px] font-bold text-amber-300">
-                        {row.pending} pending
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-1.5 text-[11px] text-stone-400">
-                  {row.participants} participant(s) • {row.approved} approved
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={() => setModuleFilter(moduleFilter === 'ambassador' ? 'all' : 'ambassador')}
-            className={`w-full mt-3 text-left p-3 rounded-xl border transition-all cursor-pointer ${
-              moduleFilter === 'ambassador'
-                ? 'bg-[#29160c] border-orange-500/70'
-                : 'bg-[#140b06] border-amber-950/70 hover:border-amber-800/80'
-            }`}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-[#22130b] border border-amber-900/40 shrink-0">
-                  <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
-                </div>
-                <span className="text-xs sm:text-sm font-semibold text-stone-200">Campus Ambassadors</span>
-              </div>
-              <span className="px-2 py-0.5 rounded-md bg-amber-950/80 border border-amber-800/60 text-[11px] font-bold text-amber-300">
-                {analysis.totals.ambassadors}
-              </span>
-            </div>
-          </button>
-        </div>
-
-        {/* By university */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#170e08] border border-amber-950/80">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-orange-400" />
-              <h4 className="font-display font-bold text-white text-sm uppercase tracking-wider">
-                Institutions Participating
-              </h4>
-            </div>
-            <span className="text-[11px] font-bold text-stone-400">
-              {analysis.universityRows.length} total
-            </span>
-          </div>
-
-          {analysis.universityRows.length === 0 ? (
-            <p className="text-xs text-stone-500 py-6 text-center">No institutions recorded yet.</p>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-              {analysis.universityRows.map(uni => {
-                const moduleLabels = Array.from(uni.modules)
-                  .map(id => modules.find(m => m.id === id)?.shortTitle || id)
-                  .join(', ');
-
-                return (
-                  <button
-                    key={uni.name}
-                    onClick={() => {
-                      setUniversityFilter(universityFilter === uni.name.toLowerCase() ? 'all' : uni.name.toLowerCase());
-                      setModuleFilter('all');
-                    }}
-                    className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
-                      universityFilter === uni.name.toLowerCase()
-                        ? 'bg-[#29160c] border-orange-500/70'
-                        : 'bg-[#140b06] border-amber-950/70 hover:border-amber-800/80'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="text-xs sm:text-sm font-semibold text-stone-200 break-words min-w-0">
-                        {uni.name}
-                      </span>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {uni.teams > 0 && (
-                          <span className="px-2 py-0.5 rounded-md bg-orange-950/80 border border-orange-800/60 text-[11px] font-bold text-orange-300">
-                            {uni.teams}T
-                          </span>
-                        )}
-                        {uni.ambassadors > 0 && (
-                          <span className="px-2 py-0.5 rounded-md bg-amber-950/80 border border-amber-800/60 text-[11px] font-bold text-amber-300">
-                            {uni.ambassadors}A
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-1 text-[11px] text-stone-400 break-words">
-                      {uni.participants} participant(s)
-                      {moduleLabels ? ` • ${moduleLabels}` : ''}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Filters */}
       <div className="p-4 bg-[#140b06] rounded-2xl border border-amber-950/70 space-y-3">
         <div className="flex flex-col sm:flex-row gap-3">
@@ -602,51 +360,48 @@ export default function AdminRegistrations({
 
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-stone-400 shrink-0" />
+            
             <select
               value={moduleFilter}
               onChange={(e) => setModuleFilter(e.target.value)}
               className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-[#1c100a] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500 cursor-pointer"
             >
-              <option value="all">All Modules &amp; Roles</option>
-              <option value="ambassador">Campus Ambassadors</option>
+              <option value="all">All Modules / Categories</option>
               {modules.map((m) => (
-                <option key={m.id} value={m.id}>{m.shortTitle}</option>
+                <option key={m.id} value={m.id}>{m.shortTitle} ({m.category})</option>
               ))}
             </select>
-          </div>
-        </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <select
-            value={universityFilter}
-            onChange={(e) => setUniversityFilter(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-xl bg-[#1c100a] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500 cursor-pointer"
-          >
-            <option value="all">All Universities &amp; Colleges</option>
-            {analysis.universityRows.map(uni => (
-              <option key={uni.name} value={uni.name.toLowerCase()}>{uni.name}</option>
-            ))}
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-xl bg-[#1c100a] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500 cursor-pointer"
-          >
-            <option value="all">Any Status</option>
-            {STATUS_OPTIONS.map(option => (
-              <option key={option} value={option}>{option === 'Pending Review' ? 'Pending Review' : option}</option>
-            ))}
-          </select>
-
-          {activeFilterCount > 0 || searchQuery ? (
-            <button
-              onClick={resetFilters}
-              className="px-4 py-2 rounded-xl bg-[#28150c] hover:bg-[#361c10] border border-amber-800/60 text-xs font-bold text-stone-200 cursor-pointer"
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-[#1c100a] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500 cursor-pointer"
             >
-              Reset Filters
-            </button>
-          ) : null}
+              <option value="all">All Types</option>
+              <option value="team">Teams Only</option>
+              <option value="ambassador">Ambassadors Only</option>
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-[#1c100a] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500 cursor-pointer"
+            >
+              <option value="all">Any Status</option>
+              {STATUS_OPTIONS.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+
+            {(typeFilter !== 'all' || statusFilter !== 'all' || moduleFilter !== 'all' || searchQuery) ? (
+              <button
+                onClick={resetFilters}
+                className="px-4 py-2 rounded-xl bg-[#28150c] hover:bg-[#361c10] border border-amber-800/60 text-xs font-bold text-stone-200 cursor-pointer whitespace-nowrap"
+              >
+                Reset
+              </button>
+            ) : null}
+          </div>
         </div>
 
         <p className="text-[11px] text-stone-500">
@@ -677,11 +432,20 @@ export default function AdminRegistrations({
             )}
 
             {decidedItems.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-3 mt-6">
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-stone-400">
                   Reviewed ({decidedItems.length})
                 </h4>
                 {decidedItems.map(renderItem)}
+              </div>
+            )}
+
+            {deletedItems.length > 0 && (
+              <div className="space-y-3 mt-6 opacity-75 hover:opacity-100 transition-opacity">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-red-400">
+                  Deleted / Trash ({deletedItems.length})
+                </h4>
+                {deletedItems.map(renderItem)}
               </div>
             )}
           </>

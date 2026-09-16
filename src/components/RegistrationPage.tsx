@@ -191,12 +191,29 @@ export default function RegistrationPage({
       return;
     }
 
+    if (leaderCnic.length !== 13) {
+      setErrorMessage('Leader CNIC must be exactly 13 digits without dashes.');
+      return;
+    }
+    if (leaderPhone.length !== 11) {
+      setErrorMessage('Leader Phone Number must be exactly 11 digits without dashes.');
+      return;
+    }
+    if (leaderWhatsapp && leaderWhatsapp.length !== 11) {
+      setErrorMessage('Leader WhatsApp Number must be exactly 11 digits without dashes.');
+      return;
+    }
+
     // Check required additional members
     const requiredMemberCount = memberCount - 1; // e.g. 3 members total = 2 additional
     for (let i = 0; i < requiredMemberCount; i++) {
       const m = members[i];
       if (!m.fullName.trim() || !m.cnic.trim() || !m.university.trim()) {
         setErrorMessage(`Please fill out required fields for Team Member #${i + 2}.`);
+        return;
+      }
+      if (m.cnic.length !== 13) {
+        setErrorMessage(`Team Member #${i + 2} CNIC must be exactly 13 digits without dashes.`);
         return;
       }
     }
@@ -256,6 +273,19 @@ export default function RegistrationPage({
 
     if (!ambFullName.trim() || !ambEmail.trim() || !ambPhone.trim() || !ambUniversity.trim()) {
       setErrorMessage('Please fill out all required fields for Ambassador Application.');
+      return;
+    }
+
+    if (ambCnic.length !== 13) {
+      setErrorMessage('CNIC must be exactly 13 digits without dashes.');
+      return;
+    }
+    if (ambPhone.length !== 11) {
+      setErrorMessage('Phone Number must be exactly 11 digits without dashes.');
+      return;
+    }
+    if (ambWhatsapp && ambWhatsapp.length !== 11) {
+      setErrorMessage('WhatsApp Number must be exactly 11 digits without dashes.');
       return;
     }
 
@@ -729,8 +759,9 @@ export default function RegistrationPage({
                     required
                     id="input-leader-cnic"
                     value={leaderCnic}
-                    onChange={(e) => setLeaderCnic(e.target.value)}
-                    placeholder="XXXXX-XXXXXXX-X"
+                    onChange={(e) => setLeaderCnic(e.target.value.replace(/\D/g, '').slice(0, 13))}
+                    placeholder="13 digits, no dashes"
+                    maxLength={13}
                     className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                   />
                 </div>
@@ -790,8 +821,9 @@ export default function RegistrationPage({
                     required
                     id="input-leader-phone"
                     value={leaderPhone}
-                    onChange={(e) => setLeaderPhone(e.target.value)}
-                    placeholder="03XXXXXXXXX"
+                    onChange={(e) => setLeaderPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                    placeholder="03XXXXXXXXX (11 digits)"
+                    maxLength={11}
                     className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                   />
                 </div>
@@ -807,8 +839,9 @@ export default function RegistrationPage({
                     required
                     id="input-leader-whatsapp"
                     value={leaderWhatsapp}
-                    onChange={(e) => setLeaderWhatsapp(e.target.value)}
-                    placeholder="03XXXXXXXXX"
+                    onChange={(e) => setLeaderWhatsapp(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                    placeholder="03XXXXXXXXX (11 digits)"
+                    maxLength={11}
                     className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                   />
                 </div>
@@ -982,8 +1015,9 @@ export default function RegistrationPage({
                           type="text"
                           required
                           value={memData.cnic}
-                          onChange={(e) => updateMember(idx, 'cnic', e.target.value)}
-                          placeholder="XXXXX-XXXXXXX-X"
+                          onChange={(e) => updateMember(idx, 'cnic', e.target.value.replace(/\D/g, '').slice(0, 13))}
+                          placeholder="13 digits, no dashes"
+                          maxLength={13}
                           className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                         />
                       </div>
@@ -1075,10 +1109,20 @@ export default function RegistrationPage({
           <button
             type="submit"
             id="submit-team-registration-btn"
-            className="w-full py-4 rounded-xl font-display text-base sm:text-lg font-bold uppercase tracking-wider text-white bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 hover:from-orange-500 hover:to-amber-500 transition-all shadow-[0_0_30px_rgba(249,115,22,0.45)] hover:shadow-[0_0_40px_rgba(249,115,22,0.65)] flex items-center justify-center gap-3 cursor-pointer active:scale-98"
+            disabled={isSubmitting}
+            className="w-full py-4 rounded-xl font-display text-base sm:text-lg font-bold uppercase tracking-wider text-white bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 hover:from-orange-500 hover:to-amber-500 transition-all shadow-[0_0_30px_rgba(249,115,22,0.45)] hover:shadow-[0_0_40px_rgba(249,115,22,0.65)] flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-98"
           >
-            <Send className="w-5 h-5 text-white" />
-            <span>SUBMIT TEAM REGISTRATION ({memberCount})</span>
+            {isSubmitting ? (
+              <>
+                <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <span>SUBMITTING…</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5 text-white" />
+                <span>SUBMIT TEAM REGISTRATION ({memberCount})</span>
+              </>
+            )}
           </button>
 
         </form>
@@ -1142,8 +1186,9 @@ export default function RegistrationPage({
                   type="text"
                   required
                   value={ambCnic}
-                  onChange={(e) => setAmbCnic(e.target.value)}
-                  placeholder="XXXXX-XXXXXXX-X"
+                  onChange={(e) => setAmbCnic(e.target.value.replace(/\D/g, '').slice(0, 13))}
+                  placeholder="13 digits, no dashes"
+                  maxLength={13}
                   className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                 />
               </div>
@@ -1268,9 +1313,17 @@ export default function RegistrationPage({
           <button
             type="submit"
             id="submit-ambassador-btn"
-            className="w-full py-4 rounded-xl font-display text-base font-bold uppercase tracking-wider text-white bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 hover:from-orange-500 hover:to-amber-500 transition-all shadow-[0_0_30px_rgba(249,115,22,0.45)] cursor-pointer"
+            disabled={isSubmitting}
+            className="w-full py-4 rounded-xl font-display text-base font-bold uppercase tracking-wider text-white bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 hover:from-orange-500 hover:to-amber-500 transition-all shadow-[0_0_30px_rgba(249,115,22,0.45)] flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none cursor-pointer"
           >
-            SUBMIT AMBASSADOR APPLICATION
+            {isSubmitting ? (
+              <>
+                <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <span>SUBMITTING…</span>
+              </>
+            ) : (
+              <span>SUBMIT AMBASSADOR APPLICATION</span>
+            )}
           </button>
         </form>
       )}

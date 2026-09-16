@@ -9,8 +9,8 @@ interface HeroSectionProps {
 export default function HeroSection({ onRegisterClick }: HeroSectionProps) {
   const { settings, logoUrl } = useCompetition();
 
-  // Real-time ticking countdown driven by the admin-configurable target date
-  const targetDate = new Date(settings.countdownTargetDate).getTime();
+  // Fixed countdown locked to 28th December
+  const targetDate = new Date('2026-12-28T09:00:00').getTime();
 
   const calculateTimeLeft = () => {
     const now = new Date().getTime();

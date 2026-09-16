@@ -6,12 +6,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   Sparkles,
-  Ruler,
-  Users,
-  Weight,
-  BatteryCharging,
-  Gamepad2,
-  Maximize2,
   PlayCircle
 } from 'lucide-react';
 import { useCompetition } from '../context/CompetitionContext';
@@ -74,7 +68,6 @@ export default function ModuleDetailView({
             h2 { font-size: 18px; color: #c2410c; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; }
             ul { padding-left: 20px; }
             li { margin-bottom: 8px; }
-            .specs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; font-size: 14px; }
             .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 15px; }
             @media print { body { padding: 0; } }
           </style>
@@ -106,24 +99,6 @@ export default function ModuleDetailView({
             <h2>5. Penalties &amp; Disqualifications</h2>
             <ul>${list(currentModule.rulebook.penaltiesAndDisqualifications)}</ul>
           </div>
-          <div class="section">
-            <h2>6. Technical Specifications</h2>
-            <div class="specs">
-              <div><strong>Team Size:</strong> ${escapeHtml(currentModule.specs.teamSize)}</div>
-              <div><strong>Robot Weight:</strong> ${escapeHtml(currentModule.specs.robotWeight)}</div>
-              <div><strong>Dimensions:</strong> ${escapeHtml(currentModule.specs.dimensions)}</div>
-              <div><strong>Arena Size:</strong> ${escapeHtml(currentModule.specs.arenaSize)}</div>
-              <div><strong>Power Limit:</strong> ${escapeHtml(currentModule.specs.powerLimit)}</div>
-              <div><strong>Control Type:</strong> ${escapeHtml(currentModule.specs.controlType)}</div>
-            </div>
-          </div>
-          <div class="section">
-            <h2>7. Official Prize Pool</h2>
-            <p><strong>1st Place:</strong> ${escapeHtml(currentModule.prizePool.firstPlace)}</p>
-            <p><strong>2nd Place:</strong> ${escapeHtml(currentModule.prizePool.secondPlace)}</p>
-            ${currentModule.prizePool.thirdPlace ? `<p><strong>3rd Place:</strong> ${escapeHtml(currentModule.prizePool.thirdPlace)}</p>` : ''}
-            ${currentModule.prizePool.bestDesign ? `<p><strong>Special Award:</strong> ${escapeHtml(currentModule.prizePool.bestDesign)}</p>` : ''}
-          </div>
           <div class="footer">
             Habib University, Karachi &bull; Verified Technical Committee Document &bull; Session 2026
           </div>
@@ -132,39 +107,42 @@ export default function ModuleDetailView({
     `);
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
   };
 
-  /** Opens the uploaded/uploadable rulebook, falling back to live guidelines. */
-  const openRulebook = (mode: 'view' | 'download') => {
+  /** Opens the rulebook in a new browser tab (never triggers a download). */
+  const openRulebook = () => {
     if (!rulebookUrl) {
       openGeneratedGuidelines();
       return;
     }
     if (rulebookUrl.startsWith('data:')) {
-      const link = document.createElement('a');
-      link.href = rulebookUrl;
-      link.download = rulebookFileName;
-      if (mode === 'view') {
-        link.target = '_blank';
-        link.rel = 'noopener';
-      }
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Blob / base64 — open as object URL in a new tab
+      const byteString = atob(rulebookUrl.split(',')[1]);
+      const mimeString = rulebookUrl.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+      const blob = new Blob([ab], { type: mimeString });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
       return;
     }
     window.open(rulebookUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const specItems = [
-    { label: 'Team Size', value: currentModule.specs.teamSize, Icon: Users },
-    { label: 'Robot Weight', value: currentModule.specs.robotWeight, Icon: Weight },
-    { label: 'Dimensions', value: currentModule.specs.dimensions, Icon: Maximize2 },
-    { label: 'Arena Size', value: currentModule.specs.arenaSize, Icon: Ruler },
-    { label: 'Power Limit', value: currentModule.specs.powerLimit, Icon: BatteryCharging },
-    { label: 'Control Type', value: currentModule.specs.controlType, Icon: Gamepad2 }
-  ];
+  /** Downloads the rulebook file. Falls back to print for generated guidelines. */
+  const downloadRulebook = () => {
+    if (!rulebookUrl) {
+      openGeneratedGuidelines();
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = rulebookUrl;
+    link.download = rulebookFileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const ruleSections = [
     { title: 'Challenge Overview', items: currentModule.rulebook.overview },
@@ -203,11 +181,10 @@ export default function ModuleDetailView({
                 key={mod.id}
                 id={`tab-module-${mod.id}`}
                 onClick={() => onSelectModule(mod.slug)}
-                className={`px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                  isActive
+                className={`px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer shrink-0 ${isActive
                     ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold shadow-[0_0_15px_rgba(249,115,22,0.4)]'
                     : 'bg-[#150c07] text-stone-400 border border-amber-950/60 hover:text-stone-200 hover:bg-[#1f110a]'
-                }`}
+                  }`}
               >
                 {getModuleIcon(mod.iconName, 'w-4 h-4')}
                 <span>{mod.shortTitle}</span>
@@ -243,7 +220,7 @@ export default function ModuleDetailView({
         </div>
       </div>
 
-      {/* DESCRIPTION BLOCK */}
+      {/* DESCRIPTION BLOCK — Registration fee only (no prize, no category) */}
       <div className="rounded-2xl bg-[#170e08] border border-amber-950/80 p-5 sm:p-7 mb-6 sm:mb-8 shadow-lg">
         <div className="flex items-center gap-2 mb-3">
           <span className="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
@@ -258,49 +235,14 @@ export default function ModuleDetailView({
           {currentModule.tagline}
         </p>
 
-        {/* Quick facts */}
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3 rounded-xl bg-[#140b06] border border-amber-950/70">
+        {/* Registration fee only */}
+        <div className="mt-5">
+          <div className="inline-block p-3 rounded-xl bg-[#140b06] border border-amber-950/70">
             <span className="text-[10px] uppercase tracking-wider text-stone-500 font-bold block">Registration Fee</span>
             <span className="text-sm font-bold text-orange-400">
               {registrationFee ? `PKR ${registrationFee.toLocaleString()} per team` : 'See registration portal'}
             </span>
           </div>
-          <div className="p-3 rounded-xl bg-[#140b06] border border-amber-950/70">
-            <span className="text-[10px] uppercase tracking-wider text-stone-500 font-bold block">Champion Prize</span>
-            <span className="text-sm font-bold text-amber-200">{currentModule.prizePool.firstPlace}</span>
-          </div>
-          <div className="p-3 rounded-xl bg-[#140b06] border border-amber-950/70">
-            <span className="text-[10px] uppercase tracking-wider text-stone-500 font-bold block">Category</span>
-            <span className="text-sm font-bold text-stone-200">
-              {currentModule.category}
-              {currentModule.isStandalone ? ' • Standalone' : ''}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* TECHNICAL SPECIFICATIONS */}
-      <div className="rounded-2xl bg-[#170e08] border border-amber-950/80 p-5 sm:p-7 mb-6 sm:mb-8 shadow-lg">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
-          <h2 className="font-display text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
-            Technical Specifications
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {specItems.map(({ label, value, Icon }) => (
-            <div key={label} className="p-3.5 rounded-xl bg-[#140b06] border border-amber-950/70 flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-orange-600/15 border border-orange-500/30 text-orange-400 shrink-0">
-                <Icon className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] uppercase tracking-wider text-stone-500 font-bold block">{label}</span>
-                <span className="text-xs sm:text-sm text-stone-200 font-medium break-words">{value}</span>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 
@@ -315,16 +257,18 @@ export default function ModuleDetailView({
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            {/* Open in new tab */}
             <button
-              onClick={() => openRulebook('view')}
+              onClick={openRulebook}
               className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-[#24130b] hover:bg-[#301a0f] border border-amber-900/60 text-xs font-semibold text-stone-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               {rulebookUrl ? <ExternalLink className="w-3.5 h-3.5 text-orange-400" /> : <PlayCircle className="w-3.5 h-3.5 text-orange-400" />}
               <span>{rulebookUrl ? 'Open Rulebook' : 'View Guidelines'}</span>
             </button>
 
+            {/* Download */}
             <button
-              onClick={() => openRulebook('download')}
+              onClick={downloadRulebook}
               className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_0_12px_rgba(249,115,22,0.4)] cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
@@ -333,52 +277,6 @@ export default function ModuleDetailView({
           </div>
         </div>
 
-        {/* File Card */}
-        <div className="p-4 rounded-xl bg-[#1d100a] border border-amber-950/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-11 h-11 rounded-xl bg-red-950/60 border border-red-800/50 flex items-center justify-center text-red-400 shrink-0">
-              <FileText className="w-6 h-6" />
-            </div>
-            <div className="min-w-0">
-              <h4 className="font-display font-bold text-white text-sm sm:text-base break-words">
-                {rulebookUrl ? rulebookFileName : 'No rulebook file published yet'}
-              </h4>
-              <p className="text-xs text-stone-400 mt-0.5 break-words">
-                {rulebookUrl
-                  ? `Official document issued by the HURC organizing committee${rulebookSize ? ` • Size: ${rulebookSize}` : ''}`
-                  : 'The guidelines below are generated live from the current module data.'}
-              </p>
-            </div>
-          </div>
-
-          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold self-start sm:self-center shrink-0 border ${
-            rulebookUrl
-              ? 'bg-emerald-950/80 border-emerald-800 text-emerald-400'
-              : 'bg-amber-950/80 border-amber-800 text-amber-300'
-          }`}>
-            {rulebookUrl ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
-            <span>{rulebookUrl ? 'Published Rulebook' : 'Live Guidelines'}</span>
-          </div>
-        </div>
-
-        {/* Live rule sections */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {ruleSections.map(section => (
-            <div key={section.title} className="p-4 sm:p-5 rounded-xl bg-[#140b06] border border-amber-950/70">
-              <h3 className="font-display text-sm font-bold uppercase tracking-wider text-orange-400 mb-2.5">
-                {section.title}
-              </h3>
-              <ul className="space-y-2">
-                {section.items.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm text-stone-300 leading-relaxed">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500/70 shrink-0" />
-                    <span className="min-w-0">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* REGISTER YOUR TEAM TODAY BOTTOM CTA */}

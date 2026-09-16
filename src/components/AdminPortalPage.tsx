@@ -88,13 +88,12 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
   const isAuthorized = isKeyUnlocked;
 
   // Active Admin Tab
-  const [activeTab, setActiveTab] = useState<'pricing' | 'uploads' | 'registrations' | 'emails' | 'settings'>('pricing');
+  const [activeTab, setActiveTab] = useState<'pricing' | 'uploads' | 'registrations'>('pricing');
 
   // Copy link feedback
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Clear-database feedback
-  const [isClearing, setIsClearing] = useState(false);
   const [clearResult, setClearResult] = useState<string | null>(null);
 
   const [viewingDetailItem, setViewingDetailItem] = useState<TeamRegistrationData | AmbassadorRegistrationData | null>(null);
@@ -230,24 +229,6 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
     }
   };
 
-  const handleClearRegistrations = async () => {
-    const confirmed = confirm(
-      `Delete all ${registrations.length} registration(s) from the cloud database?\n\nThis permanently removes them for every device and cannot be undone.`
-    );
-    if (!confirmed) return;
-
-    setIsClearing(true);
-    setClearResult(null);
-    const result = await clearRegistrations();
-    setIsClearing(false);
-    setClearResult(
-      result.failed > 0
-        ? `${result.deleted} registration(s) deleted, ${result.failed} could not be removed from the cloud database.`
-        : `All ${result.deleted} registration(s) were deleted from the cloud database.`
-    );
-    setTimeout(() => setClearResult(null), 7000);
-  };
-
   const handleLogoFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -267,7 +248,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
 
   const handleSaveAllPricings = async () => {
     await updateSettings({ pricings: localPricings });
-    setSaveSuccessMessage('Module fees, prize pools, and statuses updated successfully in Firestore!');
+    setSaveSuccessMessage('Module registration fees and open/close statuses updated successfully in Firestore!');
     setTimeout(() => setSaveSuccessMessage(null), 3000);
   };
 
@@ -641,30 +622,6 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
               <Users className="w-4 h-4" />
               <span>Registrations ({registrations.length})</span>
             </button>
-
-            <button
-              onClick={() => setActiveTab('emails')}
-              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
-                activeTab === 'emails'
-                  ? 'bg-orange-600 text-white shadow-md'
-                  : 'bg-[#160c07] text-stone-400 border border-amber-950/60 hover:text-white'
-              }`}
-            >
-              <Mail className="w-4 h-4" />
-              <span>Dispatched Emails Outbox ({sentEmails.length})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
-                activeTab === 'settings'
-                  ? 'bg-orange-600 text-white shadow-md'
-                  : 'bg-[#160c07] text-stone-400 border border-amber-950/60 hover:text-white'
-              }`}
-            >
-              <SettingsIcon className="w-4 h-4" />
-              <span>Platform Settings</span>
-            </button>
           </div>
 
           {/* TAB 1: MODULE PRICINGS & PRIZE POOLS */}
@@ -734,75 +691,23 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                         </label>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <label className="block text-stone-400 font-semibold mb-1">
-                            Fee per Team (PKR)
-                          </label>
-                          <input
-                            type="number"
-                            value={currentPricing.registrationFeePKR}
-                            onChange={(e) => {
-                              const val = Number(e.target.value);
-                              setLocalPricings(prev => ({
-                                ...prev,
-                                [mod.id]: { ...currentPricing, registrationFeePKR: val }
-                              }));
-                            }}
-                            className="w-full px-3 py-2 rounded-xl bg-[#120804] border border-amber-950 text-stone-200 font-bold focus:outline-none focus:border-orange-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-stone-400 font-semibold mb-1">
-                            1st Place Prize
-                          </label>
-                          <input
-                            type="text"
-                            value={currentPricing.prizeFirstPKR}
-                            onChange={(e) => {
-                              setLocalPricings(prev => ({
-                                ...prev,
-                                [mod.id]: { ...currentPricing, prizeFirstPKR: e.target.value }
-                              }));
-                            }}
-                            className="w-full px-3 py-2 rounded-xl bg-[#120804] border border-amber-950 text-stone-200 focus:outline-none focus:border-orange-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-stone-400 font-semibold mb-1">
-                            2nd Place Prize
-                          </label>
-                          <input
-                            type="text"
-                            value={currentPricing.prizeSecondPKR}
-                            onChange={(e) => {
-                              setLocalPricings(prev => ({
-                                ...prev,
-                                [mod.id]: { ...currentPricing, prizeSecondPKR: e.target.value }
-                              }));
-                            }}
-                            className="w-full px-3 py-2 rounded-xl bg-[#120804] border border-amber-950 text-stone-200 focus:outline-none focus:border-orange-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-stone-400 font-semibold mb-1">
-                            3rd Place Prize
-                          </label>
-                          <input
-                            type="text"
-                            value={currentPricing.prizeThirdPKR}
-                            onChange={(e) => {
-                              setLocalPricings(prev => ({
-                                ...prev,
-                                [mod.id]: { ...currentPricing, prizeThirdPKR: e.target.value }
-                              }));
-                            }}
-                            className="w-full px-3 py-2 rounded-xl bg-[#120804] border border-amber-950 text-stone-200 focus:outline-none focus:border-orange-500"
-                          />
-                        </div>
+                      {/* Only registration fee + open/close — no prize fields */}
+                      <div className="text-xs">
+                        <label className="block text-stone-400 font-semibold mb-1">
+                          Fee per Team (PKR)
+                        </label>
+                        <input
+                          type="number"
+                          value={currentPricing.registrationFeePKR}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setLocalPricings(prev => ({
+                              ...prev,
+                              [mod.id]: { ...currentPricing, registrationFeePKR: val }
+                            }));
+                          }}
+                          className="w-full px-3 py-2 rounded-xl bg-[#120804] border border-amber-950 text-stone-200 font-bold focus:outline-none focus:border-orange-500"
+                        />
                       </div>
                     </div>
                   );
@@ -1120,8 +1025,6 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
               onResendEmail={handleResendEmail}
               onInspect={(item) => setViewingDetailItem(item)}
               onExportCSV={exportCSV}
-              onClearAll={handleClearRegistrations}
-              isClearing={isClearing}
             />
           )}
 
@@ -1181,181 +1084,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
             </div>
           )}
 
-          {/* TAB 5: PLATFORM SETTINGS */}
-          {activeTab === 'settings' && (
-            <div className="max-w-2xl space-y-6">
-              <div>
-                <h3 className="font-display text-xl font-bold uppercase text-white">
-                  Event Countdown &amp; System Configuration
-                </h3>
-                <p className="text-xs text-stone-400">
-                  Configure live announcement banner text, countdown timer date, and secret admin credentials.
-                </p>
-              </div>
 
-              <div className="space-y-4 bg-[#170e08] p-6 rounded-2xl border border-amber-950/80">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1.5 uppercase">
-                    Top Announcement Pill Text
-                  </label>
-                  <input
-                    type="text"
-                    value={announcementText}
-                    onChange={(e) => setAnnouncementText(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 text-xs sm:text-sm text-stone-200 focus:outline-none focus:border-orange-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1.5 uppercase">
-                    Countdown Target Date &amp; Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={countdownDate.substring(0, 16)}
-                    onChange={(e) => setCountdownDate(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 text-xs sm:text-sm text-stone-200 focus:outline-none focus:border-orange-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1.5 uppercase">
-                    Support Contact Email
-                  </label>
-                  <input
-                    type="email"
-                    value={contactEmail}
-                    onChange={(e) => setContactEmail(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 text-xs sm:text-sm text-stone-200 focus:outline-none focus:border-orange-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1.5 uppercase">
-                    Authorized Admin Login ID
-                  </label>
-                  <input
-                    type="text"
-                    value={customAdminLoginId}
-                    onChange={(e) => setCustomAdminLoginId(e.target.value)}
-                    placeholder="organizer@habib.edu.pk"
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 text-xs sm:text-sm text-stone-200 focus:outline-none focus:border-orange-500"
-                  />
-                  <p className="text-[11px] text-stone-500 mt-1">
-                    The Admin ID required at the admin portal sign-in screen. The organizer email allow-list is also accepted.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1.5 uppercase">
-                    Admin Portal Secret Key
-                  </label>
-                  <input
-                    type="text"
-                    value={customSecretToken}
-                    onChange={(e) => setCustomSecretToken(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 text-xs sm:text-sm text-stone-200 font-mono focus:outline-none focus:border-orange-500"
-                  />
-                  <p className="text-[11px] text-stone-500 mt-1">
-                    Used as the password at the sign-in screen and as the <span className="font-mono">?key=</span> parameter in your unique admin portal link.
-                  </p>
-                </div>
-
-                {/* EMAIL CONFIGURATION (Gmail SMTP) */}
-                <div className="p-4 rounded-xl bg-[#120804] border border-amber-900/60 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-orange-400 uppercase tracking-wider">
-                      Confirmation Email Sender (Gmail SMTP)
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                      settings.smtpEmail
-                        ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
-                        : 'bg-amber-950 text-amber-300 border-amber-800'
-                    }`}>
-                      {settings.smtpEmail ? 'Address Set (password in Vercel env)' : 'Not Set Up'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-stone-400 mb-1 uppercase">
-                        Gmail Address (From)
-                      </label>
-                      <input
-                        type="email"
-                        value={smtpEmail}
-                        onChange={(e) => setSmtpEmail(e.target.value)}
-                        placeholder="hurc3426@gmail.com"
-                        className="w-full px-3 py-2 rounded-xl bg-[#0d0704] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-stone-400 mb-1 uppercase">
-                        Gmail App Password (16 chars)
-                      </label>
-                      <input
-                        type="password"
-                        value={smtpPassword}
-                        onChange={(e) => setSmtpPassword(e.target.value)}
-                        placeholder="xxxx xxxx xxxx xxxx (not stored in DB)"
-                        className="w-full px-3 py-2 rounded-xl bg-[#0d0704] border border-amber-950 text-xs text-stone-200 font-mono focus:outline-none focus:border-orange-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold text-stone-400 mb-1 uppercase">
-                      From Name
-                    </label>
-                    <input
-                      type="text"
-                      value={smtpFromName}
-                      onChange={(e) => setSmtpFromName(e.target.value)}
-                      placeholder="HURC 2026"
-                      className="w-full px-3 py-2 rounded-xl bg-[#0d0704] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleTestSmtp}
-                      disabled={smtpTestStatus === 'testing' || !smtpEmail.trim()}
-                      className="px-4 py-2 rounded-xl bg-[#2b170f] hover:bg-[#381f14] border border-amber-800/60 text-xs font-bold text-stone-200 disabled:opacity-40 flex items-center gap-2 cursor-pointer"
-                    >
-                      {smtpTestStatus === 'testing' ? (
-                        <>
-                          <span className="w-3 h-3 border-2 border-stone-500 border-t-orange-400 rounded-full animate-spin" />
-                          <span>Sending test...</span>
-                        </>
-                      ) : (
-                        <span>Save &amp; Send Test Email</span>
-                      )}
-                    </button>
-                    {smtpTestStatus === 'success' && (
-                      <span className="text-xs font-bold text-emerald-400">✓ Test email sent! Check your inbox.</span>
-                    )}
-                    {smtpTestStatus === 'error' && (
-                      <span className="text-xs font-bold text-red-400">✗ Test failed — verify Gmail address &amp; App Password.</span>
-                    )}
-                  </div>
-
-                  <p className="text-[11px] text-stone-500 leading-relaxed">
-                    Until configured, confirmation emails are recorded as <strong className="text-amber-400">Failed</strong> and participants receive nothing.
-                    To enable: (1) create a Gmail App Password at <span className="font-mono text-stone-400">myaccount.google.com → Security → 2-Step Verification → App passwords</span> (2FA required on the HURC Gmail),
-                    (2) add <span className="font-mono text-stone-400">HURC_SMTP_EMAIL</span> and <span className="font-mono text-stone-400">HURC_SMTP_PASSWORD</span> in Vercel → Settings → Environment Variables,
-                    (3) redeploy. Use the test button (with the password pasted above) to verify without a redeploy.
-                  </p>
-                </div>
-
-                <button
-                  onClick={handleSaveGeneralSettings}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(249,115,22,0.4)] cursor-pointer"
-                >
-                  Save Platform Settings
-                </button>
-              </div>
-            </div>
-          )}
         </>
       )}
 
