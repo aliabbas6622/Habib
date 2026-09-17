@@ -1,4 +1,5 @@
 import { useState, FormEvent, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import { 
   ArrowLeft, 
   Users, 
@@ -139,6 +140,197 @@ export default function RegistrationPage({
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [submittedData, activeTab]);
+
+  useEffect(() => {
+    if (!submittedData) return;
+
+    const isTeam = submittedData.type === 'team';
+    const teamData = submittedData as TeamRegistrationData;
+    const ambData = submittedData as AmbassadorRegistrationData;
+
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 18;
+    const contentW = pageW - margin * 2;
+    let y = 0;
+
+    // ── Dark header band ────────────────────────────────────────────────────────
+    doc.setFillColor(13, 7, 4);
+    doc.rect(0, 0, pageW, 42, 'F');
+
+    // Orange accent stripe
+    doc.setFillColor(234, 88, 12);
+    doc.rect(0, 42, pageW, 2, 'F');
+
+    // Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(255, 255, 255);
+    doc.text('HURC 2026', margin, 18);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(161, 101, 60);
+    doc.text('Habib University Robotics Competition', margin, 26);
+
+    // Badge top-right
+    doc.setFillColor(234, 88, 12);
+    doc.roundedRect(pageW - margin - 48, 10, 48, 12, 3, 3, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(255, 255, 255);
+    doc.text(
+      isTeam ? 'TEAM REGISTRATION' : 'AMBASSADOR APPLICATION',
+      pageW - margin - 24, 17.5,
+      { align: 'center' }
+    );
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(120, 80, 50);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 36);
+
+    y = 54;
+
+    // ── Helper functions ─────────────────────────────────────────────────────────
+    const addSection = (title: string) => {
+      if (y > pageH - 30) { doc.addPage(); y = 20; }
+      doc.setFillColor(234, 88, 12);
+      doc.rect(margin, y, 4, 7, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 15, 8);
+      doc.text(title.toUpperCase(), margin + 8, y + 5.5);
+      y += 13;
+    };
+
+    const addRow = (label: string, value: string) => {
+      if (y > pageH - 20) { doc.addPage(); y = 20; }
+      // Subtle row background
+      doc.setFillColor(250, 245, 240);
+      doc.rect(margin, y, contentW, 8, 'F');
+      // Label
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(120, 80, 50);
+      doc.text(label, margin + 3, y + 5.5);
+      // Value
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(20, 10, 5);
+      const lines = doc.splitTextToSize(value || '—', contentW - 65);
+      doc.text(lines, margin + 62, y + 5.5);
+      y += 8 + (lines.length - 1) * 5;
+    };
+
+    const addDivider = () => {
+      doc.setDrawColor(230, 210, 190);
+      doc.line(margin, y, pageW - margin, y);
+      y += 5;
+    };
+
+    // ── Reference block ──────────────────────────────────────────────────────────
+    doc.setFillColor(255, 245, 235);
+    doc.roundedRect(margin, y, contentW, 16, 3, 3, 'F');
+    doc.setDrawColor(234, 88, 12);
+    doc.roundedRect(margin, y, contentW, 16, 3, 3, 'S');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(120, 80, 50);
+    doc.text('REGISTRATION REFERENCE CODE', margin + 4, y + 6);
+
+    doc.setFontSize(16);
+    doc.setTextColor(234, 88, 12);
+    doc.text(submittedData.id, margin + 4, y + 13.5);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(120, 80, 50);
+    doc.text('Keep this code for event check-in & scrutineering.', pageW - margin - 4, y + 13.5, { align: 'right' });
+    y += 22;
+
+    // ── Content ──────────────────────────────────────────────────────────────────
+    if (isTeam) {
+      addSection('Team Details');
+      addRow('Team Name', teamData.teamName);
+      addRow('Member Count', `${teamData.memberCount} Members`);
+      addRow('Timestamp', teamData.timestamp);
+      addRow('Modules Selected',
+        teamData.selectedModules
+          .map(m => modules.find(mod => mod.id === m)?.title || m)
+          .join(', ')
+      );
+      y += 4;
+      addDivider();
+
+      addSection('Team Leader Information');
+      addRow('Full Name', teamData.leader.fullName);
+      addRow("Father's Name", teamData.leader.fatherName);
+      addRow('Gender', teamData.leader.gender);
+      addRow('CNIC / B-Form', teamData.leader.cnic);
+      addRow('Student ID', teamData.leader.studentId || '—');
+      addRow('Email', teamData.leader.email);
+      addRow('Phone', teamData.leader.phone);
+      addRow('WhatsApp', teamData.leader.whatsapp);
+      addRow('City', teamData.leader.city);
+      addRow('University / Institution', teamData.leader.university);
+      addRow('Degree Program', teamData.leader.degree);
+      addRow('Semester', teamData.leader.semester);
+      y += 4;
+      addDivider();
+
+      // Additional members
+      teamData.members.forEach((m, i) => {
+        addSection(`Team Member ${i + 2}`);
+        addRow('Full Name', m.fullName);
+        addRow("Father's Name", m.fatherName);
+        addRow('Gender', m.gender);
+        addRow('CNIC / B-Form', m.cnic);
+        addRow('City', m.city);
+        addRow('University / Institution', m.university);
+        addRow('Degree Program', m.degree);
+        addRow('Semester', m.semester);
+        y += 4;
+        if (i < teamData.members.length - 1) addDivider();
+      });
+    } else {
+      addSection('Ambassador Information');
+      addRow('Full Name', ambData.fullName);
+      addRow("Father's Name", ambData.fatherName);
+      addRow('Gender', ambData.gender);
+      addRow('CNIC / B-Form', ambData.cnic);
+      addRow('Email', ambData.email);
+      addRow('Phone', ambData.phone);
+      addRow('WhatsApp', ambData.whatsapp);
+      addRow('City', ambData.city);
+      addRow('University / Institution', ambData.university);
+      addRow('Degree Program', ambData.degree);
+      addRow('Semester', ambData.semester);
+      y += 4;
+      addDivider();
+
+      addSection('Additional Details');
+      addRow('Social/LinkedIn Link', ambData.socialLink || '—');
+      addRow('Motivation', ambData.motivation || '—');
+      addRow('Past Experience', ambData.pastExperience || '—');
+    }
+
+    // ── Footer ──────────────────────────────────────────────────────────────────
+    const totalPages = (doc.internal as any).getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFillColor(13, 7, 4);
+      doc.rect(0, pageH - 12, pageW, 12, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(120, 80, 50);
+      doc.text('HURC 2026 • Habib University Robotics Competition • Official Registration Slip', margin, pageH - 4);
+      doc.text(`Page ${i} of ${totalPages}`, pageW - margin, pageH - 4, { align: 'right' });
+    }
+
+    doc.save(`HURC_Registration_${submittedData.id}.pdf`);
+  }, [submittedData]);
 
   // Handle Module Toggle with standalone constraint
   const handleToggleModule = (modId: string) => {
@@ -336,157 +528,60 @@ export default function RegistrationPage({
 
   // SUCCESS CONFIRMATION VIEW
   if (submittedData) {
-    const isTeam = submittedData.type === 'team';
-    const teamData = submittedData as TeamRegistrationData;
-    const ambData = submittedData as AmbassadorRegistrationData;
-    const recipientEmail = isTeam ? teamData.leader.email : ambData.email;
-
     return (
-      <div className="min-h-screen py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto animate-in fade-in">
-        <div className="rounded-3xl bg-[#1a0f09] border border-orange-500/40 p-8 sm:p-12 shadow-[0_0_50px_rgba(249,115,22,0.2)] text-center">
-          
-          <div className="w-16 h-16 rounded-2xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10 text-orange-500" />
+      <div className="min-h-screen py-16 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto flex items-center justify-center animate-in fade-in">
+        <div className="text-center p-8 sm:p-12 rounded-3xl bg-[#1a0f09] border border-orange-500/40 shadow-[0_0_50px_rgba(249,115,22,0.2)] w-full space-y-6">
+          <CheckCircle2 className="w-20 h-20 text-orange-500 mx-auto" />
+          <div>
+            <h1 className="font-display text-3xl sm:text-4xl font-black uppercase text-white tracking-wide mb-3">
+              The form has been submitted
+            </h1>
+            <p className="text-stone-300 text-sm sm:text-base">
+              Your registration details have been automatically downloaded to your device.
+            </p>
           </div>
 
-          <span className="text-xs font-bold text-orange-400 uppercase tracking-widest bg-orange-950/60 px-3 py-1 rounded-full border border-orange-800/40">
-            Registration Confirmed
-          </span>
-
-          <h1 className="font-display text-2xl sm:text-4xl font-black uppercase text-white mt-4 tracking-wide leading-tight">
-            {isTeam ? 'Team Successfully Registered!' : 'Ambassador Application Received!'}
-          </h1>
-
-          <p className="mt-2 text-stone-300 text-sm sm:text-base">
-            Your official application for Habib University Robotics Competition 2026 has been recorded in the Firebase cloud database.
-          </p>
-
-          {/* Email Dispatched Alert Card (wording reflects true delivery status) */}
-          <div className="mt-6 p-4 rounded-2xl bg-[#22130b] border border-orange-500/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left">
-            <div className="flex items-start sm:items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-orange-600/20 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
-                <Mail className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 flex-wrap">
-                  {lastDispatchedEmail?.status === 'Delivered' ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      <span>Confirmation Email Sent</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="w-4 h-4 text-amber-400" />
-                      <span>Confirmation Email Could Not Be Sent</span>
-                    </>
-                  )}
-                </h4>
-                <p className="text-xs text-stone-400 mt-0.5">
-                  {lastDispatchedEmail?.status === 'Delivered' ? (
-                    <>A confirmation email was sent to <strong className="text-stone-200">{recipientEmail}</strong>. Keep your registration ID for check-in.</>
-                  ) : (
-                    <>Your registration is saved, but the email to <strong className="text-stone-200">{recipientEmail}</strong> could not be delivered automatically. The organizing team will contact you — save your registration ID.</>
-                  )}
-                </p>
-              </div>
+          {/* Fee Payment Notice */}
+          <div className="p-5 rounded-2xl bg-amber-950/40 border border-amber-700/50 text-left flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 mt-0.5">
+              <Info className="w-5 h-5 text-amber-400" />
             </div>
-
-            <button
-              onClick={() => setPreviewEmailModal(lastDispatchedEmail)}
-              className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-[0_0_12px_rgba(249,115,22,0.4)] shrink-0 cursor-pointer"
-            >
-              <Eye className="w-4 h-4" />
-              <span>View Sent Email</span>
-            </button>
+            <div>
+              <h3 className="font-bold text-amber-300 text-sm mb-1">Important — Fee Payment Required to Confirm Registration</h3>
+              <p className="text-amber-200/80 text-xs leading-relaxed">
+                Your registration is recorded but <strong className="text-amber-300">not yet confirmed</strong>. The Team Leader will be contacted by the HURC organizing team and a <strong className="text-amber-300">fee challan will be shared</strong>. To complete and confirm your registration, the team must pay the required fee within the given deadline.
+              </p>
+            </div>
           </div>
 
-          {/* Reference ID Pill */}
-          <div className="mt-6 p-4 rounded-xl bg-[#23140c] border border-amber-900/60 inline-flex flex-col items-center">
-            <span className="text-xs text-stone-400 uppercase font-semibold tracking-wider">
-              Registration Reference Code
-            </span>
-            <span className="font-display text-2xl sm:text-3xl font-black text-orange-400 mt-1 tracking-wider">
-              {submittedData.id}
-            </span>
-            <span className="text-[11px] text-stone-400 mt-1">
-              Save this code for check-in and scrutineering
-            </span>
+          {/* Contact Details */}
+          <div className="p-5 rounded-2xl bg-[#1f1109] border border-orange-900/50 text-left flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-600/20 border border-orange-500/30 flex items-center justify-center shrink-0 mt-0.5">
+              <Mail className="w-5 h-5 text-orange-400" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-sm mb-1">For Further Queries</h3>
+              <p className="text-stone-400 text-xs mb-1">Contact our organizing team directly:</p>
+              <a
+                href="tel:03218268445"
+                className="text-orange-400 font-bold text-base hover:text-orange-300 transition-colors"
+              >
+                0321-826-8445
+              </a>
+            </div>
           </div>
 
-          {/* Summary Details */}
-          <div className="mt-8 text-left rounded-2xl bg-[#140a06] border border-amber-950/80 p-5 sm:p-6 space-y-3 text-sm">
-            {isTeam ? (
-              <>
-                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400 shrink-0">Team Name:</span>
-                  <span className="font-bold text-white text-right break-words min-w-0">{teamData.teamName}</span>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400 shrink-0">Modules:</span>
-                  <span className="font-semibold text-orange-400 text-right break-words min-w-0">
-                    {teamData.selectedModules.map(m => modules.find(mod => mod.id === m)?.shortTitle || m).join(', ')}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400 shrink-0">Team Leader:</span>
-                  <span className="font-medium text-stone-200 text-right break-words min-w-0">{teamData.leader.fullName}</span>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400 shrink-0">Leader Email:</span>
-                  <span className="font-medium text-stone-200 text-right break-all min-w-0">{teamData.leader.email}</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span className="text-stone-400 shrink-0">Total Members:</span>
-                  <span className="font-semibold text-stone-200 text-right">{teamData.memberCount} Members</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400 shrink-0">Applicant:</span>
-                  <span className="font-bold text-white text-right break-words min-w-0">{ambData.fullName}</span>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-amber-950/60 pb-2">
-                  <span className="text-stone-400 shrink-0">Institution:</span>
-                  <span className="font-semibold text-orange-400 text-right break-words min-w-0">{ambData.university}</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span className="text-stone-400 shrink-0">Contact Email:</span>
-                  <span className="font-medium text-stone-200 text-right break-all min-w-0">{ambData.email}</span>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => window.print()}
-              className="px-6 py-3 rounded-xl bg-[#2a170d] hover:bg-[#341d10] border border-amber-800/60 text-stone-200 font-semibold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <Download className="w-4 h-4 text-orange-400" />
-              <span>Print Registration Slip</span>
-            </button>
-
-            <button
-              onClick={onBackToHome}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
-            >
-              <FileCheck className="w-4 h-4" />
-              <span>Return to Competition Portal</span>
-            </button>
-          </div>
-
+          <button
+            onClick={onBackToHome}
+            className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md mx-auto cursor-pointer"
+          >
+            Return to Home
+          </button>
         </div>
-
-        {/* Email Preview Modal */}
-        <EmailPreviewModal
-          email={previewEmailModal}
-          onClose={() => setPreviewEmailModal(null)}
-        />
       </div>
     );
   }
+
 
   // MAIN REGISTRATION FORM (Matches Screenshot 2)
   return (

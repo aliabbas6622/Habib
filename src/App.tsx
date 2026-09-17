@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import ModulesGrid from './components/ModulesGrid';
+import StudentBodySection from './components/StudentBodySection';
 import SponsorsSection from './components/SponsorsSection';
 import BottomCtaSection from './components/BottomCtaSection';
 import Footer from './components/Footer';
@@ -14,7 +15,7 @@ import { useCompetition } from './context/CompetitionContext';
 import { TeamRegistrationData, AmbassadorRegistrationData } from './types';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'register' | 'module-detail' | 'admin'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'register' | 'module-detail' | 'admin' | 'student-body'>('home');
   const [selectedModuleSlug, setSelectedModuleSlug] = useState<string>('drone-workshop');
   const [preSelectedRegisterModule, setPreSelectedRegisterModule] = useState<string | undefined>(undefined);
 
@@ -33,6 +34,8 @@ export default function App() {
         }
       } else if (hash === '#/register') {
         setCurrentView('register');
+      } else if (hash === '#/student-body') {
+        setCurrentView('student-body');
       } else if (hash.startsWith('#/admin') || hash === '#admin' || hash === `#/admin-portal` || (settings.portalCustomUrl && hash.includes(settings.portalCustomUrl))) {
         setCurrentView('admin');
       } else {
@@ -55,6 +58,12 @@ export default function App() {
     setPreSelectedRegisterModule(defaultModuleId);
     window.location.hash = '#/register';
     setCurrentView('register');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToStudentBody = () => {
+    window.location.hash = '#/student-body';
+    setCurrentView('student-body');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -83,6 +92,7 @@ export default function App() {
         onNavigateHome={navigateToHome}
         onNavigateRegister={navigateToRegister}
         onNavigateModule={navigateToModule}
+        onNavigateStudentBody={navigateToStudentBody}
         onOpenAdmin={navigateToAdmin}
       />
 
@@ -94,6 +104,12 @@ export default function App() {
             <ModulesGrid onSelectModule={navigateToModule} />
             <SponsorsSection />
             <BottomCtaSection onRegisterClick={() => navigateToRegister()} />
+          </div>
+        )}
+
+        {currentView === 'student-body' && (
+          <div className="animate-in fade-in duration-300">
+            <StudentBodySection />
           </div>
         )}
 

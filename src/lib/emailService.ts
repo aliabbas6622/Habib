@@ -118,7 +118,7 @@ export function generateTeamConfirmationEmailHtml(reg: TeamRegistrationData, tot
           <div class="footer">
             © 2026 Habib University Robotics Competition (HURC).<br>
             Habib University, Block 18, Gulistan-e-Jauhar, University Avenue, Karachi.<br>
-            Need assistance? Contact hurc.support@habib.edu.pk
+            Need assistance? Contact hurc3426@gmail.com
           </div>
         </div>
       </body>

@@ -35,14 +35,8 @@ export default function Footer({ onNavigateHome }: FooterProps) {
           © 2026 Habib University Robotics Competition. All rights reserved.
         </p>
 
-        {settings.contactEmail && (
-          <a
-            href={`mailto:${settings.contactEmail}`}
-            className="text-xs text-stone-400 hover:text-orange-400 transition-colors break-all"
-          >
-            {settings.contactEmail}
-          </a>
-        )}
+
+
 
       </div>
     </footer>

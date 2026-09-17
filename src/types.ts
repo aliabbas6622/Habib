@@ -34,6 +34,13 @@ export interface CompetitionModule {
   };
 }
 
+export interface StudentBodyMember {
+  id: string;
+  role: string;
+  name: string;
+  imageUrl?: string | null;
+}
+
 export interface TeamMember {
   fullName: string;
   fatherName: string;

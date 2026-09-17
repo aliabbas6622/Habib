@@ -21,6 +21,7 @@ interface NavbarProps {
   onNavigateHome: () => void;
   onNavigateRegister: (defaultModuleId?: string) => void;
   onNavigateModule: (slug: string) => void;
+  onNavigateStudentBody: () => void;
   onOpenAdmin: () => void;
   currentView: string;
 }
@@ -41,6 +42,7 @@ export default function Navbar({
   onNavigateHome,
   onNavigateRegister,
   onNavigateModule,
+  onNavigateStudentBody,
   onOpenAdmin,
   currentView
 }: NavbarProps) {
@@ -214,6 +216,17 @@ export default function Navbar({
               )}
             </div>
 
+            <button
+              onClick={onNavigateStudentBody}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
+                currentView === 'student-body'
+                  ? 'bg-amber-950/60 text-orange-400 border border-amber-800/40'
+                  : 'text-stone-300 hover:text-white hover:bg-stone-900/40'
+              }`}
+            >
+              Student Body
+            </button>
+
             {/* User Auth Control (only visible when already signed in, e.g. admin) */}
             {currentUser && (
               <div className="relative" ref={userMenuRef}>
@@ -363,6 +376,18 @@ export default function Navbar({
                 ))}
               </div>
             </div>
+
+            <button
+              onClick={() => {
+                onNavigateStudentBody();
+                closeMobileMenu();
+              }}
+              className={`w-full text-left px-3 py-2 rounded-lg font-medium cursor-pointer mt-2 ${
+                currentView === 'student-body' ? 'text-orange-400 bg-[#20120a]' : 'text-stone-200 hover:bg-stone-800/60'
+              }`}
+            >
+              Student Body
+            </button>
 
             <div className="pt-2 border-t border-amber-950/60 space-y-2">
               {currentUser && (

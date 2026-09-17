@@ -21,7 +21,8 @@ import {
   EyeOff,
   Building2,
   ImagePlus,
-  Link2
+  Link2,
+  UserSquare2
 } from 'lucide-react';
 import {
   useCompetition,
@@ -61,7 +62,10 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
     clearRegistrations,
     logoUrl,
     cloudSyncWarning,
-    clearCloudSyncWarning
+    clearCloudSyncWarning,
+    dynamicStudentBody,
+    updateStudentBodyMember,
+    uploadStudentBodyImage
   } = useCompetition();
 
   const { currentUser, isAdmin, userProfile, signIn, signOut } = useAuth();
@@ -88,7 +92,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
   const isAuthorized = isKeyUnlocked;
 
   // Active Admin Tab
-  const [activeTab, setActiveTab] = useState<'pricing' | 'uploads' | 'registrations'>('pricing');
+  const [activeTab, setActiveTab] = useState<string>('pricing');
 
   // Copy link feedback
   const [copiedLink, setCopiedLink] = useState(false);
@@ -622,6 +626,18 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
               <Users className="w-4 h-4" />
               <span>Registrations ({registrations.length})</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('studentBody')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
+                activeTab === 'studentBody'
+                  ? 'bg-orange-600 text-white shadow-md'
+                  : 'bg-[#160c07] text-stone-400 border border-amber-950/60 hover:text-white'
+              }`}
+            >
+              <UserSquare2 className="w-4 h-4" />
+              <span>Student Body</span>
+            </button>
           </div>
 
           {/* TAB 1: MODULE PRICINGS & PRIZE POOLS */}
@@ -1086,6 +1102,114 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
 
 
         </>
+      )}
+
+      {activeTab === 'studentBody' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-display text-xl font-bold uppercase text-white">
+                Student Body Directors
+              </h3>
+              <p className="text-xs text-stone-400">
+                Manage the names and pictures of the 12 core directors shown on the landing page.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {dynamicStudentBody.map((member) => (
+              <div key={member.id} className="p-4 rounded-2xl bg-[#170e08] border border-amber-950/80 space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 rounded-xl bg-[#1b1009] border border-orange-500/40 overflow-hidden shrink-0">
+                    {member.imageUrl ? (
+                      <img src={member.imageUrl} alt={member.role} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-stone-600 text-[10px] text-center px-1">No Pic</div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-[10px] text-orange-400 font-bold uppercase mb-1 leading-tight">{member.role}</div>
+                    <input
+                      type="text"
+                      value={member.name}
+                      onChange={(e) => updateStudentBodyMember(member.id, e.target.value)}
+                      placeholder="Enter director name..."
+                      className="w-full px-3 py-1.5 rounded-lg bg-[#120804] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      
+                      // We will compress the image to ensure it easily fits in Firestore and local storage.
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = async () => {
+                          // Compress image using canvas
+                          const canvas = document.createElement('canvas');
+                          let width = img.width;
+                          let height = img.height;
+                          
+                          // Max dimensions for profile picture
+                          const MAX_DIMENSION = 400;
+                          
+                          if (width > height) {
+                            if (width > MAX_DIMENSION) {
+                              height *= MAX_DIMENSION / width;
+                              width = MAX_DIMENSION;
+                            }
+                          } else {
+                            if (height > MAX_DIMENSION) {
+                              width *= MAX_DIMENSION / height;
+                              height = MAX_DIMENSION;
+                            }
+                          }
+                          
+                          canvas.width = width;
+                          canvas.height = height;
+                          const ctx = canvas.getContext('2d');
+                          if (ctx) {
+                            ctx.drawImage(img, 0, 0, width, height);
+                            // Export as high compression JPEG
+                            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            
+                            await uploadStudentBodyImage(member.id, compressedDataUrl);
+                            setSaveSuccessMessage(`Updated picture for ${member.role}`);
+                            setTimeout(() => setSaveSuccessMessage(null), 3000);
+                          }
+                        };
+                        img.src = event.target?.result as string;
+                      };
+                      reader.readAsDataURL(file);
+                      
+                      // Reset the file input so the same file can be selected again if needed
+                      e.target.value = '';
+                    }}
+                    className="block w-full text-[10px] text-stone-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-orange-600 file:text-white hover:file:bg-orange-500 cursor-pointer"
+                  />
+                  {member.imageUrl && (
+                    <button 
+                      onClick={async () => {
+                        await uploadStudentBodyImage(member.id, null);
+                        setSaveSuccessMessage(`Removed picture for ${member.role}`);
+                        setTimeout(() => setSaveSuccessMessage(null), 3000);
+                      }}
+                      className="text-[10px] text-red-400 hover:text-red-300 mt-2 block"
+                    >
+                      Remove picture
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* DETAILED DOSSIER MODAL */}

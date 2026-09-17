@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore';
 import { db, testFirestoreConnection } from '../lib/firebase';
 import { COMPETITION_MODULES, HURC_LOGO } from '../data/modulesData';
-import { CompetitionModule, TeamRegistrationData, AmbassadorRegistrationData } from '../types';
+import { CompetitionModule, TeamRegistrationData, AmbassadorRegistrationData, StudentBodyMember } from '../types';
 import { sendRegistrationConfirmationEmail, DispatchedEmail, getDispatchedEmails } from '../lib/emailService';
 
 export interface ModulePricing {
@@ -56,6 +56,7 @@ export interface CompetitionSettings {
   smtpFromName?: string;
   pricings: Record<string, ModulePricing>;
   moduleCustomAssets: Record<string, ModuleCustomAsset>;
+  studentBody: StudentBodyMember[];
 }
 
 export const DEFAULT_ADMIN_LOGIN_ID = 'hurc3426@gmail.com';
@@ -67,7 +68,7 @@ const DEFAULT_SETTINGS: CompetitionSettings = {
   adminSecretToken: DEFAULT_ADMIN_SECRET_TOKEN,
   adminLoginId: DEFAULT_ADMIN_LOGIN_ID,
   portalCustomUrl: 'admin-portal-hurc-secure-auth',
-  contactEmail: 'hurc.support@habib.edu.pk',
+  contactEmail: 'hurc3426@gmail.com',
   earlyBirdDiscountPercent: 0,
   droneWorkshopStandaloneStrict: true,
   pricings: {
@@ -78,7 +79,21 @@ const DEFAULT_SETTINGS: CompetitionSettings = {
     'autonomous-navigation': { moduleId: 'autonomous-navigation', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 100,000 Cash Prize', prizeSecondPKR: 'PKR 50,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
     'drone-workshop': { moduleId: 'drone-workshop', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 70,000 Drone Kit & Trophy', prizeSecondPKR: 'PKR 35,000 High-Torque ESC Kit', prizeThirdPKR: 'Special FPV Goggles Kit', isOpen: true }
   },
-  moduleCustomAssets: {}
+  moduleCustomAssets: {},
+  studentBody: [
+    { id: '1', role: 'President HURC', name: '' },
+    { id: '2', role: 'Vice President HURC', name: '' },
+    { id: '3', role: 'Registration and Finance Director HURC', name: '' },
+    { id: '4', role: 'Marketing and Design Director HURC', name: '' },
+    { id: '5', role: 'Logistics Director HURC', name: '' },
+    { id: '6', role: 'Robo Wars Director HURC', name: '' },
+    { id: '7', role: 'Robo Soccer Director HURC', name: '' },
+    { id: '8', role: 'Ready To Race Director HURC', name: '' },
+    { id: '9', role: 'Drone Workshop Director HURC', name: '' },
+    { id: '10', role: 'Indiginious Module Director HURC', name: '' },
+    { id: '11', role: 'Sumo Wars Director HURC', name: '' },
+    { id: '12', role: 'Sponsorship Director HURC', name: '' },
+  ]
 };
 
 /**
@@ -95,14 +110,16 @@ const ASSET_DOC_PREFIX = 'asset__';
 const ASSET_KEYS = {
   logo: 'site-logo',
   banner: (moduleId: string) => `module-banner-${moduleId}`,
-  rulebook: (moduleId: string) => `module-rulebook-${moduleId}`
+  rulebook: (moduleId: string) => `module-rulebook-${moduleId}`,
+  studentBody: (id: string) => `student-body-${id}`
 };
 
 // Fixed set of asset documents that may exist, so boot only reads what could be there
 const ASSET_KEY_LIST = [
   ASSET_KEYS.logo,
   ...COMPETITION_MODULES.map(m => ASSET_KEYS.banner(m.id)),
-  ...COMPETITION_MODULES.map(m => ASSET_KEYS.rulebook(m.id))
+  ...COMPETITION_MODULES.map(m => ASSET_KEYS.rulebook(m.id)),
+  ...DEFAULT_SETTINGS.studentBody.map(member => ASSET_KEYS.studentBody(member.id))
 ];
 
 const assetDocRef = (key: string) => doc(db, 'settings', `${ASSET_DOC_PREFIX}${key}`);
@@ -160,6 +177,7 @@ export interface ClearRegistrationsResult {
 interface CompetitionContextType {
   settings: CompetitionSettings;
   modules: CompetitionModule[];
+  dynamicStudentBody: StudentBodyMember[];
   /** Brand logo: uploaded asset, then external URL, then bundled default. */
   logoUrl: string;
   registrations: (TeamRegistrationData | AmbassadorRegistrationData)[];
@@ -175,6 +193,8 @@ interface CompetitionContextType {
   updateLogo: (dataUrl: string | null) => Promise<void>;
   uploadModuleBanner: (moduleId: string, dataUrl: string) => Promise<void>;
   uploadModuleRulebook: (moduleId: string, dataUrl: string, fileName: string, sizeLabel: string) => Promise<void>;
+  updateStudentBodyMember: (id: string, name: string) => Promise<void>;
+  uploadStudentBodyImage: (id: string, dataUrl: string | null) => Promise<void>;
   saveRegistration: (data: TeamRegistrationData | AmbassadorRegistrationData) => Promise<DispatchedEmail>;
   updateRegistrationStatus: (id: string, status: string) => Promise<void>;
   resendEmailForRegistration: (id: string) => Promise<DispatchedEmail | null>;
@@ -493,6 +513,34 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateStudentBodyMember = async (id: string, name: string) => {
+    const updatedStudentBody = settingsRef.current.studentBody.map(member => 
+      member.id === id ? { ...member, name } : member
+    );
+    await updateSettings({ studentBody: updatedStudentBody });
+  };
+
+  const uploadStudentBodyImage = async (id: string, dataUrl: string | null) => {
+    if (!dataUrl) {
+      await removeAsset(ASSET_KEYS.studentBody(id));
+      const updatedStudentBody = settingsRef.current.studentBody.map(member => 
+        member.id === id ? { ...member, imageUrl: null } : member
+      );
+      await updateSettings({ studentBody: updatedStudentBody });
+      return;
+    }
+
+    if (dataUrl.startsWith('data:')) {
+      await putAsset(ASSET_KEYS.studentBody(id), dataUrl);
+    } else {
+      await removeAsset(ASSET_KEYS.studentBody(id));
+      const updatedStudentBody = settingsRef.current.studentBody.map(member => 
+        member.id === id ? { ...member, imageUrl: dataUrl } : member
+      );
+      await updateSettings({ studentBody: updatedStudentBody });
+    }
+  };
+
   // Submit and save new registration + trigger automated email
   const saveRegistration = async (data: TeamRegistrationData | AmbassadorRegistrationData): Promise<DispatchedEmail> => {
     // 1. Calculate fee based on active module pricings
@@ -645,11 +693,17 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
 
   const logoUrl = assetBlobs[ASSET_KEYS.logo] || settings.logoUrl || HURC_LOGO;
 
+  const dynamicStudentBody = settings.studentBody.map(member => ({
+    ...member,
+    imageUrl: assetBlobs[ASSET_KEYS.studentBody(member.id)] || member.imageUrl
+  }));
+
   return (
     <CompetitionContext.Provider
       value={{
         settings,
         modules: dynamicModules,
+        dynamicStudentBody,
         logoUrl,
         registrations,
         sentEmails,
@@ -663,6 +717,8 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
         updateLogo,
         uploadModuleBanner,
         uploadModuleRulebook,
+        updateStudentBodyMember,
+        uploadStudentBodyImage,
         saveRegistration,
         updateRegistrationStatus,
         resendEmailForRegistration,
