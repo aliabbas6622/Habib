@@ -182,8 +182,8 @@ export default function ModuleDetailView({
                 id={`tab-module-${mod.id}`}
                 onClick={() => onSelectModule(mod.slug)}
                 className={`px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer shrink-0 ${isActive
-                    ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold shadow-[0_0_15px_rgba(249,115,22,0.4)]'
-                    : 'bg-[#150c07] text-stone-400 border border-amber-950/60 hover:text-stone-200 hover:bg-[#1f110a]'
+                  ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold shadow-[0_0_15px_rgba(249,115,22,0.4)]'
+                  : 'bg-[#150c07] text-stone-400 border border-amber-950/60 hover:text-stone-200 hover:bg-[#1f110a]'
                   }`}
               >
                 {getModuleIcon(mod.iconName, 'w-4 h-4')}
