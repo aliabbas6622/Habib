@@ -30,13 +30,27 @@ export default function Footer({ onNavigateHome }: FooterProps) {
           </span>
         </div>
 
+        {/* Contact Info */}
+        <div className="mt-2 flex flex-col items-center gap-2 text-sm text-stone-400">
+          <span className="font-semibold text-stone-300 uppercase text-xs tracking-wider">Contact Support</span>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center">
+            <a href="tel:03282216926" className="hover:text-orange-400 transition-colors">0328 2216926</a>
+            <span className="hidden sm:inline text-stone-700">•</span>
+            <a href="tel:+923342136920" className="hover:text-orange-400 transition-colors">+92 334 2136920</a>
+            <span className="hidden sm:inline text-stone-700">•</span>
+            <a href="tel:+923218269445" className="hover:text-orange-400 transition-colors">+92 321 8269445</a>
+          </div>
+          {settings.contactEmail && (
+            <a href={`mailto:${settings.contactEmail}`} className="mt-1 hover:text-orange-400 transition-colors text-xs">
+              {settings.contactEmail}
+            </a>
+          )}
+        </div>
+
         {/* Copyright */}
-        <p className="text-xs text-stone-500 max-w-md">
+        <p className="text-xs text-stone-500 max-w-md mt-4">
           © 2026 Habib University Robotics Competition. All rights reserved.
         </p>
-
-
-
 
       </div>
     </footer>

@@ -15,7 +15,7 @@ export interface DispatchedEmail {
   sentAt: string;
 }
 
-export function generateTeamConfirmationEmailHtml(reg: TeamRegistrationData, totalFeePKR: number = 3500): string {
+export function generateTeamConfirmationEmailHtml(reg: TeamRegistrationData, totalFeePKR: number = 3000): string {
   return `
     <!DOCTYPE html>
     <html>
@@ -183,7 +183,7 @@ export function generateAmbassadorConfirmationEmailHtml(reg: AmbassadorRegistrat
 // Dispatch email to registeree via the /api/send-email Vercel function and store record in Firestore
 export async function sendRegistrationConfirmationEmail(
   reg: TeamRegistrationData | AmbassadorRegistrationData,
-  totalFeePKR: number = 3500
+  totalFeePKR: number = 3000
 ): Promise<DispatchedEmail> {
   const isTeam = reg.type === 'team';
   const recipientEmail = isTeam 

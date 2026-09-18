@@ -3,7 +3,6 @@ import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import ModulesGrid from './components/ModulesGrid';
 import StudentBodySection from './components/StudentBodySection';
-import SponsorsSection from './components/SponsorsSection';
 import BottomCtaSection from './components/BottomCtaSection';
 import Footer from './components/Footer';
 import RegistrationPage from './components/RegistrationPage';
@@ -102,7 +101,6 @@ export default function App() {
           <div className="animate-in fade-in duration-300">
             <HeroSection onRegisterClick={() => navigateToRegister()} />
             <ModulesGrid onSelectModule={navigateToModule} />
-            <SponsorsSection />
             <BottomCtaSection onRegisterClick={() => navigateToRegister()} />
           </div>
         )}

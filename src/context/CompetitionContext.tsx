@@ -72,27 +72,27 @@ const DEFAULT_SETTINGS: CompetitionSettings = {
   earlyBirdDiscountPercent: 0,
   droneWorkshopStandaloneStrict: true,
   pricings: {
-    'robowars': { moduleId: 'robowars', registrationFeePKR: 4500, prizeFirstPKR: 'PKR 150,000 Cash Prize', prizeSecondPKR: 'PKR 75,000 Cash Prize', prizeThirdPKR: 'PKR 35,000 Cash Prize', isOpen: true },
-    'robo-soccer': { moduleId: 'robo-soccer', registrationFeePKR: 4000, prizeFirstPKR: 'PKR 120,000 Cash Prize', prizeSecondPKR: 'PKR 60,000 Cash Prize', prizeThirdPKR: 'PKR 30,000 Cash Prize', isOpen: true },
+    'robowars': { moduleId: 'robowars', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 150,000 Cash Prize', prizeSecondPKR: 'PKR 75,000 Cash Prize', prizeThirdPKR: 'PKR 35,000 Cash Prize', isOpen: true },
+    'robo-soccer': { moduleId: 'robo-soccer', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 120,000 Cash Prize', prizeSecondPKR: 'PKR 60,000 Cash Prize', prizeThirdPKR: 'PKR 30,000 Cash Prize', isOpen: true },
     'line-following-robot': { moduleId: 'line-following-robot', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 80,000 Cash Prize', prizeSecondPKR: 'PKR 40,000 Cash Prize', prizeThirdPKR: 'PKR 20,000 Cash Prize', isOpen: true },
-    'sumo-wars': { moduleId: 'sumo-wars', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 90,000 Cash Prize', prizeSecondPKR: 'PKR 45,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
-    'autonomous-navigation': { moduleId: 'autonomous-navigation', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 100,000 Cash Prize', prizeSecondPKR: 'PKR 50,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
+    'sumo-wars': { moduleId: 'sumo-wars', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 90,000 Cash Prize', prizeSecondPKR: 'PKR 45,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
+    'autonomous-navigation': { moduleId: 'autonomous-navigation', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 100,000 Cash Prize', prizeSecondPKR: 'PKR 50,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
     'drone-workshop': { moduleId: 'drone-workshop', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 70,000 Drone Kit & Trophy', prizeSecondPKR: 'PKR 35,000 High-Torque ESC Kit', prizeThirdPKR: 'Special FPV Goggles Kit', isOpen: true }
   },
   moduleCustomAssets: {},
   studentBody: [
-    { id: '1', role: 'President HURC', name: '' },
-    { id: '2', role: 'Vice President HURC', name: '' },
-    { id: '3', role: 'Registration and Finance Director HURC', name: '' },
-    { id: '4', role: 'Marketing and Design Director HURC', name: '' },
-    { id: '5', role: 'Logistics Director HURC', name: '' },
-    { id: '6', role: 'Robo Wars Director HURC', name: '' },
-    { id: '7', role: 'Robo Soccer Director HURC', name: '' },
-    { id: '8', role: 'Ready To Race Director HURC', name: '' },
-    { id: '9', role: 'Drone Workshop Director HURC', name: '' },
-    { id: '10', role: 'Indiginious Module Director HURC', name: '' },
-    { id: '11', role: 'Sumo Wars Director HURC', name: '' },
-    { id: '12', role: 'Sponsorship Director HURC', name: '' },
+    { id: '1', role: 'President', name: '' },
+    { id: '2', role: 'Vice President', name: '' },
+    { id: '3', role: 'Director Registration and Finance', name: '' },
+    { id: '4', role: 'Director Marketing and Design', name: '' },
+    { id: '5', role: 'Director Logistics', name: '' },
+    { id: '6', role: 'Director Robo Wars', name: '' },
+    { id: '7', role: 'Director Robo Soccer', name: '' },
+    { id: '8', role: 'Director Ready To Race', name: '' },
+    { id: '9', role: 'Director Drone Workshop', name: '' },
+    { id: '10', role: 'Director Indigenous Module', name: '' },
+    { id: '11', role: 'Director Sumo Wars', name: '' },
+    { id: '12', role: 'Director Sponsorship', name: '' },
   ]
 };
 
@@ -207,7 +207,22 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<CompetitionSettings>(() => {
     try {
       const saved = localStorage.getItem('hurc_settings');
-      if (saved) return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.pricings) {
+          Object.keys(parsed.pricings).forEach(key => {
+            parsed.pricings[key].registrationFeePKR = 3000;
+          });
+        }
+        const merged = { ...DEFAULT_SETTINGS, ...parsed };
+        if (parsed.studentBody) {
+          merged.studentBody = DEFAULT_SETTINGS.studentBody.map(defaultMember => {
+            const parsedMember = parsed.studentBody.find((m: any) => m.id === defaultMember.id);
+            return parsedMember ? { ...defaultMember, name: parsedMember.name, imageUrl: parsedMember.imageUrl } : defaultMember;
+          });
+        }
+        return merged;
+      }
     } catch {}
     return DEFAULT_SETTINGS;
   });
@@ -273,12 +288,13 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       } else {
         await deleteDoc(assetDocRef(key));
       }
+      setCloudSyncWarning(null);
       return true;
     } catch (e) {
       console.warn('Asset kept on this device only (cloud write failed):', e);
       if (notifyUser) {
         setCloudSyncWarning(
-          'That file is saved on this device but could not be uploaded to the cloud database. Please check your connection and try again.'
+          `File saved on this device but NOT uploaded to cloud. ${firestoreErrReason(e)}`
         );
       }
       return false;
@@ -295,6 +311,18 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
     return writeAssetDoc(key, null);
   };
 
+  /** Extracts a short human-readable reason from a Firestore error. */
+  const firestoreErrReason = (e: unknown): string => {
+    if (e && typeof e === 'object' && 'code' in e) {
+      const code = (e as { code: string }).code;
+      if (code === 'permission-denied') return 'Permission denied — Firestore rules may not be deployed yet.';
+      if (code === 'unavailable')       return 'Firestore is offline or unreachable.';
+      if (code === 'unauthenticated')   return 'Unauthenticated — sign in with an organizer account.';
+      return `Firestore error: ${code}`;
+    }
+    return String(e);
+  };
+
   const updateSettings = async (newSettings: Partial<CompetitionSettings>) => {
     const merged = { ...settingsRef.current, ...newSettings };
     settingsRef.current = merged;
@@ -308,7 +336,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       setCloudSyncWarning(null);
     } catch (e) {
       console.warn('Saved settings locally, Firestore save skipped:', e);
-      setCloudSyncWarning('Settings were saved on this device but could not be synced to the cloud database.');
+      setCloudSyncWarning(`Settings saved on this device but NOT synced to cloud. ${firestoreErrReason(e)}`);
     }
   };
 
@@ -359,54 +387,80 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     testFirestoreConnection();
 
-    const loadAssets = async () => {
-      try {
-        const snapshots = await Promise.all(
-          ASSET_KEY_LIST.map(key =>
-            getDoc(assetDocRef(key)).then(snap => ({ key, snap })).catch(() => null)
-          )
-        );
-        const remote: Record<string, string> = {};
-        snapshots.forEach(entry => {
-          if (!entry || !entry.snap.exists()) return;
-          const data = entry.snap.data() as { dataUrl?: string };
-          if (typeof data?.dataUrl === 'string') remote[entry.key] = data.dataUrl;
-        });
-        if (Object.keys(remote).length === 0) return;
-        setAssetBlobs(prev => {
-          const next = { ...prev, ...remote };
-          try {
-            localStorage.setItem(ASSET_LOCAL_CACHE, JSON.stringify(next));
-          } catch {}
-          return next;
-        });
-      } catch (e) {
-        console.warn('Using local asset cache:', e);
-      }
-    };
-
-    // Sync settings from Firestore
-    const syncSettings = async () => {
-      try {
-        const snap = await getDoc(doc(db, 'settings', 'competition_config'));
-        if (snap.exists()) {
-          const remote = snap.data() as Partial<CompetitionSettings>;
-          const merged = { ...DEFAULT_SETTINGS, ...remote };
-          settingsRef.current = merged;
-          setSettings(merged);
-          try {
-            localStorage.setItem('hurc_settings', JSON.stringify(merged));
-          } catch {}
-          await migrateInlineAssets(merged);
+    // Sync assets from Firestore in real-time using a collection listener
+    let unsubAssets: (() => void) | undefined;
+    try {
+      unsubAssets = onSnapshot(
+        collection(db, 'settings'),
+        (snapshot) => {
+          const remote: Record<string, string> = {};
+          snapshot.forEach(docSnap => {
+            if (docSnap.id.startsWith(ASSET_DOC_PREFIX)) {
+              const key = docSnap.id.replace(ASSET_DOC_PREFIX, '');
+              const data = docSnap.data() as { dataUrl?: string };
+              if (typeof data?.dataUrl === 'string') {
+                remote[key] = data.dataUrl;
+              }
+            }
+          });
+          
+          if (Object.keys(remote).length > 0) {
+            setAssetBlobs(prev => {
+              const next = { ...prev, ...remote };
+              try {
+                localStorage.setItem(ASSET_LOCAL_CACHE, JSON.stringify(next));
+              } catch {}
+              return next;
+            });
+          }
+        },
+        (error) => {
+          console.warn('Realtime assets listener inactive:', error);
         }
-      } catch (e) {
-        console.warn('Using local settings cache:', e);
-      }
-    };
+      );
+    } catch (e) {
+      console.warn('Using local asset cache:', e);
+    }
 
-    loadAssets();
-    syncSettings();
+    // Sync settings from Firestore in real-time
+    let unsubSettings: (() => void) | undefined;
+    try {
+      unsubSettings = onSnapshot(
+        doc(db, 'settings', 'competition_config'),
+        async (snap) => {
+          if (snap.exists()) {
+            const remote = snap.data() as Partial<CompetitionSettings>;
+            const merged = { ...DEFAULT_SETTINGS, ...remote };
+            
+            if (remote.studentBody) {
+              merged.studentBody = DEFAULT_SETTINGS.studentBody.map(defaultMember => {
+                const remoteMember = remote.studentBody!.find(m => m.id === defaultMember.id);
+                return remoteMember ? { ...defaultMember, name: remoteMember.name, imageUrl: remoteMember.imageUrl } : defaultMember;
+              });
+            }
+            
+            // Force all module prices to exactly 3000 globally
+            if (merged.pricings) {
+              Object.keys(merged.pricings).forEach(key => {
+                merged.pricings[key].registrationFeePKR = 3000;
+              });
+            }
 
+            settingsRef.current = merged;
+            setSettings(merged);
+            try {
+              localStorage.setItem('hurc_settings', JSON.stringify(merged));
+            } catch {}
+            await migrateInlineAssets(merged);
+          }
+        },
+        (error) => {
+          console.warn('Realtime settings listener inactive:', error);
+        }
+      );
+    } catch (e) {
+      console.warn('Using local settings cache:', e);
+    }
     // Listen to registrations in Firestore
     let unsub: (() => void) | undefined;
     try {
@@ -454,13 +508,15 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
 
     return () => {
       if (unsub) unsub();
+      if (unsubSettings) unsubSettings();
+      if (unsubAssets) unsubAssets();
     };
   }, []);
 
   const updateModulePricing = async (moduleId: string, pricing: Partial<ModulePricing>) => {
     const existing = settingsRef.current.pricings[moduleId] || {
       moduleId,
-      registrationFeePKR: 3500,
+      registrationFeePKR: 3000,
       prizeFirstPKR: 'PKR 100,000 Cash',
       prizeSecondPKR: 'PKR 50,000 Cash',
       prizeThirdPKR: 'PKR 25,000 Cash',
@@ -549,7 +605,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       const team = data as TeamRegistrationData;
       team.selectedModules.forEach(modId => {
         const p = settingsRef.current.pricings[modId];
-        calculatedFee += p ? p.registrationFeePKR : 3500;
+        calculatedFee += p ? p.registrationFeePKR : 3000;
       });
     }
 
@@ -578,9 +634,10 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
           createdAt: new Date().toISOString()
         })
       );
+      setCloudSyncWarning(null);
     } catch (e) {
       console.warn('Saved registration locally, Firestore write skipped:', e);
-      setCloudSyncWarning('A registration was saved on this device but could not be synced to the cloud database.');
+      setCloudSyncWarning(`Registration saved locally but NOT synced to cloud. ${firestoreErrReason(e)}`);
     }
 
     return dispatched;
@@ -602,20 +659,25 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
     });
     try {
       await setDoc(doc(db, 'registrations', id), { status }, { merge: true });
-      // Firestore confirmed — the next snapshot will clear the override automatically
+      // Firestore confirmed — clear the override so the next snapshot governs
+      delete pendingStatusOverrides.current[id];
+      try {
+        localStorage.setItem('HURC_STATUS_OVERRIDES', JSON.stringify(pendingStatusOverrides.current));
+      } catch {}
+      setCloudSyncWarning(null);
     } catch (e) {
-      console.warn('Updated status locally:', e);
-      setCloudSyncWarning('That approval was saved on this device but could not be synced to the cloud database.');
+      console.warn('Status update kept locally, Firestore write skipped:', e);
+      setCloudSyncWarning(`Status saved locally but NOT synced to cloud. ${firestoreErrReason(e)}`);
     }
   };
 
   const resendEmailForRegistration = async (id: string): Promise<DispatchedEmail | null> => {
     const target = registrations.find(r => r.id === id);
     if (!target) return null;
-    let fee = 3500;
+    let fee = 3000;
     if (target.type === 'team') {
       const team = target as TeamRegistrationData;
-      fee = team.selectedModules.reduce((acc, m) => acc + (settingsRef.current.pricings[m]?.registrationFeePKR || 3500), 0);
+      fee = team.selectedModules.reduce((acc, m) => acc + (settingsRef.current.pricings[m]?.registrationFeePKR || 3000), 0);
     }
     const sent = await sendRegistrationConfirmationEmail(target, fee);
     setSentEmails(prev => [sent, ...prev]);
@@ -678,7 +740,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       ...m,
       image: bannerBlob || customAsset.customBannerUrl || m.image,
       isOpen: customPrice ? customPrice.isOpen : true,
-      registrationFeePKR: customPrice ? customPrice.registrationFeePKR : 3500,
+      registrationFeePKR: customPrice ? customPrice.registrationFeePKR : 3000,
       prizePool: {
         ...m.prizePool,
         firstPlace: customPrice?.prizeFirstPKR || m.prizePool.firstPlace,

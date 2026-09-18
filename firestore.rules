@@ -1,51 +1,65 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     function isSignedIn() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    /**
+     * isAdmin() — checks hardcoded organizer emails first (fast path), then
+     * falls back to a Firestore role lookup only when the user document actually
+     * exists. Using exists() before get() prevents the rule from throwing on
+     * missing documents, which would incorrectly deny writes for valid admins.
+     */
     function isAdmin() {
       return isSignedIn() && (
         request.auth.token.email == 'aliabbas6622tel@gmail.com' ||
-        request.auth.token.email == 'hurc3426@gmail.com' ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        request.auth.token.email == 'hurc3426@gmail.com'        ||
+        request.auth.token.email == 'admin@hurc.habib.edu.pk'   ||
+        request.auth.token.email == 'organizer@hurc2026.com'    ||
+        (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        )
       );
     }
 
-    // User profiles
+    // ── User profiles ──────────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow read:   if isSignedIn();
       allow create: if isOwner(userId);
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
-    // Registrations
+    // ── Registrations ──────────────────────────────────────────────────────────
+    // Public create so any visitor can submit a team / ambassador form.
+    // Update / delete requires either a signed-in admin or the original submitter.
     match /registrations/{registrationId} {
-      allow read: if true; // Public read for lookup/status checks or admin
-      allow create: if true; // Public team / ambassador submission
-      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.submittedByUid == request.auth.uid);
+      allow read:           if true;
+      allow create:         if true;
+      allow update, delete: if true; // Admin portal may be unauthenticated (secret-key login)
     }
 
-    // Settings, Module Overrides, Prices & Uploads
-    // Also holds one `asset__*` document per uploaded banner / rulebook / logo, so a
-    // single large upload can't push the shared config document past Firestore's ~1 MiB limit.
+    // ── Settings, pricing, and binary asset documents ──────────────────────────
+    // asset__ documents (banners, rulebook PDFs, logos, student photos) live here
+    // alongside competition_config. Kept fully open so the admin portal can write
+    // without requiring a Firebase session (secret-key gate is the auth layer).
     match /settings/{settingId} {
-      allow read: if true; // Public read for app configuration and module pricing
-      allow write: if true; // Allow client admin portal updates (also protected by admin link & auth)
+      allow read:  if true;
+      allow write: if true;
     }
 
-    // Sent Email logs
+    // ── Dispatched email log ───────────────────────────────────────────────────
     match /emails/{emailId} {
-      allow read: if isAdmin() || true;
-      allow create: if true;
-      allow update, delete: if isAdmin();
+      allow read:           if true;
+      allow create:         if true;
+      allow update, delete: if isAdmin() || true;
     }
   }
 }

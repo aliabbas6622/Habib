@@ -128,6 +128,25 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
   const [smtpFromName, setSmtpFromName] = useState(settings.smtpFromName || 'HURC 2026');
   const [smtpTestStatus, setSmtpTestStatus] = useState<string | null>(null);
 
+  // Keep general settings editor in sync with the copy loaded from Firestore
+  useEffect(() => {
+    setAnnouncementText(settings.announcementText);
+    setCountdownDate(settings.countdownTargetDate);
+    setContactEmail(settings.contactEmail);
+    setCustomSecretToken(settings.adminSecretToken);
+    setCustomAdminLoginId(settings.adminLoginId);
+    setSmtpEmail(settings.smtpEmail || '');
+    setSmtpFromName(settings.smtpFromName || 'HURC 2026');
+  }, [
+    settings.announcementText,
+    settings.countdownTargetDate,
+    settings.contactEmail,
+    settings.adminSecretToken,
+    settings.adminLoginId,
+    settings.smtpEmail,
+    settings.smtpFromName
+  ]);
+
   // Auto-unlock when the correct key is present in the URL (supports ?key= both
   // inside the hash route (#/admin?key=...) and as a real query string)
   useEffect(() => {
@@ -666,7 +685,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                 {modules.map((mod) => {
                   const currentPricing = localPricings[mod.id] || {
                     moduleId: mod.id,
-                    registrationFeePKR: 3500,
+                    registrationFeePKR: 3000,
                     prizeFirstPKR: 'PKR 100,000 Cash',
                     prizeSecondPKR: 'PKR 50,000 Cash',
                     prizeThirdPKR: 'PKR 25,000 Cash',
@@ -707,23 +726,14 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                         </label>
                       </div>
 
-                      {/* Only registration fee + open/close — no prize fields */}
+                      {/* Only open/close — price is fixed to 3000 */}
                       <div className="text-xs">
-                        <label className="block text-stone-400 font-semibold mb-1">
+                        <div className="block text-stone-400 font-semibold mb-1">
                           Fee per Team (PKR)
-                        </label>
-                        <input
-                          type="number"
-                          value={currentPricing.registrationFeePKR}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setLocalPricings(prev => ({
-                              ...prev,
-                              [mod.id]: { ...currentPricing, registrationFeePKR: val }
-                            }));
-                          }}
-                          className="w-full px-3 py-2 rounded-xl bg-[#120804] border border-amber-950 text-stone-200 font-bold focus:outline-none focus:border-orange-500"
-                        />
+                        </div>
+                        <div className="w-full px-3 py-2 rounded-xl bg-[#120804]/50 border border-amber-950/50 text-stone-400 font-bold">
+                          3000 (Fixed)
+                        </div>
                       </div>
                     </div>
                   );
