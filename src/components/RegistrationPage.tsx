@@ -364,6 +364,8 @@ export default function RegistrationPage({
     setMembers(updated);
   };
 
+  const isDroneWorkshop = selectedModules.includes('drone-workshop');
+
   const handleTeamSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -374,30 +376,31 @@ export default function RegistrationPage({
     }
 
     if (!teamName.trim()) {
-      setErrorMessage('Please enter your Team Name.');
+      setErrorMessage(isDroneWorkshop ? 'Please enter your Participant Name / Nickname.' : 'Please enter your Team Name.');
       return;
     }
 
     if (!leaderFullName.trim() || !leaderEmail.trim() || !leaderPhone.trim() || !leaderUniversity.trim()) {
-      setErrorMessage('Please complete all required fields for the Team Leader.');
+      setErrorMessage(isDroneWorkshop ? 'Please complete all required fields.' : 'Please complete all required fields for the Team Leader.');
       return;
     }
 
     if (leaderCnic.length !== 13) {
-      setErrorMessage('Leader CNIC must be exactly 13 digits without dashes.');
+      setErrorMessage(isDroneWorkshop ? 'CNIC must be exactly 13 digits without dashes.' : 'Leader CNIC must be exactly 13 digits without dashes.');
       return;
     }
     if (leaderPhone.length !== 11) {
-      setErrorMessage('Leader Phone Number must be exactly 11 digits without dashes.');
+      setErrorMessage(isDroneWorkshop ? 'Phone Number must be exactly 11 digits without dashes.' : 'Leader Phone Number must be exactly 11 digits without dashes.');
       return;
     }
     if (leaderWhatsapp && leaderWhatsapp.length !== 11) {
-      setErrorMessage('Leader WhatsApp Number must be exactly 11 digits without dashes.');
+      setErrorMessage(isDroneWorkshop ? 'WhatsApp Number must be exactly 11 digits without dashes.' : 'Leader WhatsApp Number must be exactly 11 digits without dashes.');
       return;
     }
 
     // Check required additional members
-    const requiredMemberCount = memberCount - 1; // e.g. 3 members total = 2 additional
+    const actualMemberCount = isDroneWorkshop ? 1 : memberCount;
+    const requiredMemberCount = actualMemberCount - 1; // e.g. 3 members total = 2 additional
     for (let i = 0; i < requiredMemberCount; i++) {
       const m = members[i];
       if (!m.fullName.trim() || !m.cnic.trim() || !m.university.trim()) {
@@ -424,7 +427,7 @@ export default function RegistrationPage({
       type: 'team',
       selectedModules,
       teamName,
-      memberCount,
+      memberCount: actualMemberCount,
       leader: {
         fullName: leaderFullName,
         fatherName: leaderFatherName,
@@ -745,15 +748,15 @@ export default function RegistrationPage({
               </span>
               <div>
                 <h2 className="font-display text-lg sm:text-xl font-bold text-white uppercase">
-                  Team Details
+                  {isDroneWorkshop ? 'Participant Details' : 'Team Details'}
                 </h2>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={`grid grid-cols-1 ${isDroneWorkshop ? '' : 'sm:grid-cols-2'} gap-4`}>
               <div>
                 <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                  Team Name <span className="text-orange-500">*</span>
+                  {isDroneWorkshop ? 'Participant Name / Nickname' : 'Team Name'} <span className="text-orange-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -761,26 +764,28 @@ export default function RegistrationPage({
                   id="input-team-name"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
-                  placeholder="e.g. Mecha Warriors"
+                  placeholder={isDroneWorkshop ? "e.g. Ali Khan" : "e.g. Mecha Warriors"}
                   className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                  Total Team Members (Leader + Members: 3 to 5) <span className="text-orange-500">*</span>
-                </label>
-                <select
-                  id="select-member-count"
-                  value={memberCount}
-                  onChange={(e) => setMemberCount(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                >
-                  <option value={3}>3 Members (Leader + 2 Members)</option>
-                  <option value={4}>4 Members (Leader + 3 Members)</option>
-                  <option value={5}>5 Members (Leader + 4 Members)</option>
-                </select>
-              </div>
+              {!isDroneWorkshop && (
+                <div>
+                  <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                    Total Team Members (Leader + Members: 3 to 5) <span className="text-orange-500">*</span>
+                  </label>
+                  <select
+                    id="select-member-count"
+                    value={memberCount}
+                    onChange={(e) => setMemberCount(Number(e.target.value))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                  >
+                    <option value={3}>3 Members (Leader + 2 Members)</option>
+                    <option value={4}>4 Members (Leader + 3 Members)</option>
+                    <option value={5}>5 Members (Leader + 4 Members)</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 
@@ -792,7 +797,7 @@ export default function RegistrationPage({
               </span>
               <div>
                 <h2 className="font-display text-lg sm:text-xl font-bold text-white uppercase">
-                  Team Leader - Personal Information
+                  {isDroneWorkshop ? 'Participant - Personal Information' : 'Team Leader - Personal Information'}
                 </h2>
               </div>
             </div>
@@ -801,7 +806,7 @@ export default function RegistrationPage({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                    Leader Full Name <span className="text-orange-500">*</span>
+                    {isDroneWorkshop ? 'Full Name' : 'Leader Full Name'} <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -886,7 +891,7 @@ export default function RegistrationPage({
               </span>
               <div>
                 <h2 className="font-display text-lg sm:text-xl font-bold text-white uppercase">
-                  Team Leader - Contact Information
+                  {isDroneWorkshop ? 'Participant - Contact Information' : 'Team Leader - Contact Information'}
                 </h2>
               </div>
             </div>
@@ -966,7 +971,7 @@ export default function RegistrationPage({
               </span>
               <div>
                 <h2 className="font-display text-lg sm:text-xl font-bold text-white uppercase">
-                  Team Leader - Academic Information
+                  {isDroneWorkshop ? 'Participant - Academic Information' : 'Team Leader - Academic Information'}
                 </h2>
               </div>
             </div>
@@ -974,7 +979,7 @@ export default function RegistrationPage({
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                  Leader University / Institution <span className="text-orange-500">*</span>
+                  {isDroneWorkshop ? 'University / Institution' : 'Leader University / Institution'} <span className="text-orange-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1021,164 +1026,166 @@ export default function RegistrationPage({
           </div>
 
           {/* DYNAMIC ADDITIONAL TEAM MEMBERS SECTION */}
-          <div className="space-y-6">
-            <div className="border-l-4 border-orange-500 pl-4 py-1">
-              <h2 className="font-display text-xl sm:text-2xl font-black uppercase text-white tracking-wide">
-                ADDITIONAL TEAM MEMBERS ({memberCount - 1} MEMBERS)
-              </h2>
-              <p className="text-xs text-stone-400 mt-0.5">
-                Enter details for each team member. Members can belong to different universities or colleges.
-              </p>
-            </div>
+          {!isDroneWorkshop && (
+            <div className="space-y-6">
+              <div className="border-l-4 border-orange-500 pl-4 py-1">
+                <h2 className="font-display text-xl sm:text-2xl font-black uppercase text-white tracking-wide">
+                  ADDITIONAL TEAM MEMBERS ({memberCount - 1} MEMBERS)
+                </h2>
+                <p className="text-xs text-stone-400 mt-0.5">
+                  Enter details for each team member. Members can belong to different universities or colleges.
+                </p>
+              </div>
 
-            {/* Render Member Cards according to memberCount */}
-            {Array.from({ length: memberCount - 1 }).map((_, idx) => {
-              const memberNumber = idx + 2;
-              const memData = members[idx];
+              {/* Render Member Cards according to memberCount */}
+              {Array.from({ length: memberCount - 1 }).map((_, idx) => {
+                const memberNumber = idx + 2;
+                const memData = members[idx];
 
-              return (
-                <div 
-                  key={idx} 
-                  id={`card-team-member-${memberNumber}`}
-                  className="rounded-2xl bg-[#1c100a] border border-amber-950/80 p-5 sm:p-7 shadow-lg"
-                >
-                  {/* Member Badge */}
-                  <div className="flex items-center gap-2 mb-5">
-                    <span className="px-2.5 py-1 rounded-md bg-orange-600 text-white font-display font-black text-xs">
-                      #{memberNumber}
-                    </span>
-                    <div>
-                      <h3 className="font-display text-base font-bold text-white tracking-wide">
-                        Team Member {memberNumber}
-                      </h3>
-                      <span className="text-[10px] text-orange-400 uppercase tracking-wider font-semibold">
-                        Participant of Team
+                return (
+                  <div 
+                    key={idx} 
+                    id={`card-team-member-${memberNumber}`}
+                    className="rounded-2xl bg-[#1c100a] border border-amber-950/80 p-5 sm:p-7 shadow-lg"
+                  >
+                    {/* Member Badge */}
+                    <div className="flex items-center gap-2 mb-5">
+                      <span className="px-2.5 py-1 rounded-md bg-orange-600 text-white font-display font-black text-xs">
+                        #{memberNumber}
                       </span>
+                      <div>
+                        <h3 className="font-display text-base font-bold text-white tracking-wide">
+                          Team Member {memberNumber}
+                        </h3>
+                        <span className="text-[10px] text-orange-400 uppercase tracking-wider font-semibold">
+                          Participant of Team
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                            Member Full Name <span className="text-orange-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={memData.fullName}
+                            onChange={(e) => updateMember(idx, 'fullName', e.target.value)}
+                            placeholder="Full name"
+                            className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                            Father / Guardian Name <span className="text-orange-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={memData.fatherName}
+                            onChange={(e) => updateMember(idx, 'fatherName', e.target.value)}
+                            placeholder="Guardian name"
+                            className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                            Gender <span className="text-orange-500">*</span>
+                          </label>
+                          <select
+                            value={memData.gender}
+                            onChange={(e) => updateMember(idx, 'gender', e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                          >
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other / Prefer not to say</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                            CNIC / B-Form Number <span className="text-orange-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={memData.cnic}
+                            onChange={(e) => updateMember(idx, 'cnic', e.target.value.replace(/\D/g, '').slice(0, 13))}
+                            placeholder="13 digits, no dashes"
+                            maxLength={13}
+                            className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                          City <span className="text-orange-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={memData.city}
+                          onChange={(e) => updateMember(idx, 'city', e.target.value)}
+                          placeholder="e.g. Karachi"
+                          className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                          University / Institution Name <span className="text-orange-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={memData.university}
+                          onChange={(e) => updateMember(idx, 'university', e.target.value)}
+                          placeholder="e.g. University / College name"
+                          className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                            Degree / Program <span className="text-orange-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={memData.degree}
+                            onChange={(e) => updateMember(idx, 'degree', e.target.value)}
+                            placeholder="e.g. BS Electrical Engineering"
+                            className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                            Current Semester / Year <span className="text-orange-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={memData.semester}
+                            onChange={(e) => updateMember(idx, 'semester', e.target.value)}
+                            placeholder="e.g. 4th Semester"
+                            className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                          Member Full Name <span className="text-orange-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={memData.fullName}
-                          onChange={(e) => updateMember(idx, 'fullName', e.target.value)}
-                          placeholder="Full name"
-                          className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                          Father / Guardian Name <span className="text-orange-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={memData.fatherName}
-                          onChange={(e) => updateMember(idx, 'fatherName', e.target.value)}
-                          placeholder="Guardian name"
-                          className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                          Gender <span className="text-orange-500">*</span>
-                        </label>
-                        <select
-                          value={memData.gender}
-                          onChange={(e) => updateMember(idx, 'gender', e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                        >
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Other">Other / Prefer not to say</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                          CNIC / B-Form Number <span className="text-orange-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={memData.cnic}
-                          onChange={(e) => updateMember(idx, 'cnic', e.target.value.replace(/\D/g, '').slice(0, 13))}
-                          placeholder="13 digits, no dashes"
-                          maxLength={13}
-                          className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                        City <span className="text-orange-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={memData.city}
-                        onChange={(e) => updateMember(idx, 'city', e.target.value)}
-                        placeholder="e.g. Karachi"
-                        className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                        University / Institution Name <span className="text-orange-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={memData.university}
-                        onChange={(e) => updateMember(idx, 'university', e.target.value)}
-                        placeholder="e.g. University / College name"
-                        className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                          Degree / Program <span className="text-orange-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={memData.degree}
-                          onChange={(e) => updateMember(idx, 'degree', e.target.value)}
-                          placeholder="e.g. BS Electrical Engineering"
-                          className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                          Current Semester / Year <span className="text-orange-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={memData.semester}
-                          onChange={(e) => updateMember(idx, 'semester', e.target.value)}
-                          placeholder="e.g. 4th Semester"
-                          className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* DECLARATION & TRUTHFULNESS */}
           <div className="rounded-2xl bg-[#1a0f09] border border-amber-950/90 p-5 sm:p-6">
@@ -1215,7 +1222,7 @@ export default function RegistrationPage({
             ) : (
               <>
                 <Send className="w-5 h-5 text-white" />
-                <span>SUBMIT TEAM REGISTRATION ({memberCount})</span>
+                <span>{isDroneWorkshop ? 'SUBMIT REGISTRATION' : `SUBMIT TEAM REGISTRATION (${memberCount})`}</span>
               </>
             )}
           </button>

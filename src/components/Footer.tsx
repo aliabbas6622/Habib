@@ -34,7 +34,7 @@ export default function Footer({ onNavigateHome }: FooterProps) {
         <div className="mt-2 flex flex-col items-center gap-2 text-sm text-stone-400">
           <span className="font-semibold text-stone-300 uppercase text-xs tracking-wider">Contact Support</span>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center">
-            <a href="tel:03282216926" className="hover:text-orange-400 transition-colors">0328 2216926</a>
+            <a href="tel:+923282216926" className="hover:text-orange-400 transition-colors">+92328 2216926</a>
             <span className="hidden sm:inline text-stone-700">•</span>
             <a href="tel:+923342136920" className="hover:text-orange-400 transition-colors">+92 334 2136920</a>
             <span className="hidden sm:inline text-stone-700">•</span>
