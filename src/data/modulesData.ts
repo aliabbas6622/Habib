@@ -310,16 +310,16 @@ export const COMPETITION_MODULES: CompetitionModule[] = [
   {
     id: 'drone-workshop',
     slug: 'drone-workshop',
-    title: 'Drone Racing & Workshop',
+    title: 'Drone Building & Workshop',
     shortTitle: 'Drone Workshop',
     category: 'Avionics & Flight',
     iconName: 'Compass',
     badge: 'Drone Workshop',
     image: droneWorkshopImg,
     isStandalone: true,
-    tagline: 'Comprehensive Aerodynamics, Soldering, PID Tuning & Flight Arena',
+    tagline: '',
     description:
-      'The Hands-On Drone Workshop & Flight Challenge brings comprehensive drone aerodynamics, assembly, avionics, telemetry, and piloting experience to HURC participants with hands-on flight arena testing and time-attack drone agility trials.',
+      'Drone Building Workshop is a 2-day hands-on program where teams of five build a fully functional drone from the ground up. Sessions cover flight dynamics, motor and ESC selection, flight controller setup, and frame assembly, followed by hands-on wiring, soldering, and calibration — giving participants real, practical experience in robotics and embedded systems.',
     specs: {
       teamSize: '1 - 3 Members (Individual or Small Teams)',
       robotWeight: 'FPV Micro/Cinewhoop Class (Sub-250g with propeller guards)',

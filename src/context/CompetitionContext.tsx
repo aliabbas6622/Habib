@@ -77,7 +77,7 @@ const DEFAULT_SETTINGS: CompetitionSettings = {
     'line-following-robot': { moduleId: 'line-following-robot', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 80,000 Cash Prize', prizeSecondPKR: 'PKR 40,000 Cash Prize', prizeThirdPKR: 'PKR 20,000 Cash Prize', isOpen: true },
     'sumo-wars': { moduleId: 'sumo-wars', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 90,000 Cash Prize', prizeSecondPKR: 'PKR 45,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
     'autonomous-navigation': { moduleId: 'autonomous-navigation', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 100,000 Cash Prize', prizeSecondPKR: 'PKR 50,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
-    'drone-workshop': { moduleId: 'drone-workshop', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 70,000 Drone Kit & Trophy', prizeSecondPKR: 'PKR 35,000 High-Torque ESC Kit', prizeThirdPKR: 'Special FPV Goggles Kit', isOpen: true }
+    'drone-workshop': { moduleId: 'drone-workshop', registrationFeePKR: 4000, prizeFirstPKR: 'PKR 70,000 Drone Kit & Trophy', prizeSecondPKR: 'PKR 35,000 High-Torque ESC Kit', prizeThirdPKR: 'Special FPV Goggles Kit', isOpen: true }
   },
   moduleCustomAssets: {},
   studentBody: [
@@ -211,7 +211,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(saved);
         if (parsed.pricings) {
           Object.keys(parsed.pricings).forEach(key => {
-            parsed.pricings[key].registrationFeePKR = 3000;
+            parsed.pricings[key].registrationFeePKR = key === 'drone-workshop' ? 4000 : 3000;
           });
         }
         const merged = { ...DEFAULT_SETTINGS, ...parsed };
@@ -439,10 +439,10 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
               });
             }
             
-            // Force all module prices to exactly 3000 globally
+            // Force module prices globally
             if (merged.pricings) {
               Object.keys(merged.pricings).forEach(key => {
-                merged.pricings[key].registrationFeePKR = 3000;
+                merged.pricings[key].registrationFeePKR = key === 'drone-workshop' ? 4000 : 3000;
               });
             }
 

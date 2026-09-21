@@ -22,6 +22,13 @@ import { useAuth } from '../context/AuthContext';
 import EmailPreviewModal from './EmailPreviewModal';
 import { DispatchedEmail } from '../lib/emailService';
 
+const PAKISTAN_CITIES = [
+  'Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad',
+  'Multan', 'Peshawar', 'Quetta', 'Sialkot', 'Gujranwala',
+  'Hyderabad', 'Sukkur', 'Bahawalpur', 'Sargodha', 'Abbottabad',
+  'Other'
+];
+
 interface RegistrationPageProps {
   onBackToHome: () => void;
   initialSelectedModuleId?: string;
@@ -61,6 +68,7 @@ export default function RegistrationPage({
   const [leaderPhone, setLeaderPhone] = useState('');
   const [leaderWhatsapp, setLeaderWhatsapp] = useState('');
   const [leaderCity, setLeaderCity] = useState('');
+  const [leaderCityOther, setLeaderCityOther] = useState('');
   const [leaderUniversity, setLeaderUniversity] = useState('');
   const [leaderDegree, setLeaderDegree] = useState('');
   const [leaderSemester, setLeaderSemester] = useState('');
@@ -82,6 +90,7 @@ export default function RegistrationPage({
       gender: 'Male',
       cnic: '',
       city: '',
+      otherCity: '',
       university: '',
       degree: '',
       semester: ''
@@ -92,6 +101,7 @@ export default function RegistrationPage({
       gender: 'Male',
       cnic: '',
       city: '',
+      otherCity: '',
       university: '',
       degree: '',
       semester: ''
@@ -102,6 +112,7 @@ export default function RegistrationPage({
       gender: 'Male',
       cnic: '',
       city: '',
+      otherCity: '',
       university: '',
       degree: '',
       semester: ''
@@ -112,6 +123,7 @@ export default function RegistrationPage({
       gender: 'Male',
       cnic: '',
       city: '',
+      otherCity: '',
       university: '',
       degree: '',
       semester: ''
@@ -127,6 +139,7 @@ export default function RegistrationPage({
   const [ambPhone, setAmbPhone] = useState('');
   const [ambWhatsapp, setAmbWhatsapp] = useState('');
   const [ambCity, setAmbCity] = useState('');
+  const [ambCityOther, setAmbCityOther] = useState('');
   const [ambUniversity, setAmbUniversity] = useState('');
   const [ambDegree, setAmbDegree] = useState('');
   const [ambSemester, setAmbSemester] = useState('');
@@ -375,8 +388,8 @@ export default function RegistrationPage({
       return;
     }
 
-    if (!teamName.trim()) {
-      setErrorMessage(isDroneWorkshop ? 'Please enter your Participant Name / Nickname.' : 'Please enter your Team Name.');
+    if (!isDroneWorkshop && !teamName.trim()) {
+      setErrorMessage('Please enter your Team Name.');
       return;
     }
 
@@ -389,12 +402,12 @@ export default function RegistrationPage({
       setErrorMessage(isDroneWorkshop ? 'CNIC must be exactly 13 digits without dashes.' : 'Leader CNIC must be exactly 13 digits without dashes.');
       return;
     }
-    if (leaderPhone.length !== 11) {
-      setErrorMessage(isDroneWorkshop ? 'Phone Number must be exactly 11 digits without dashes.' : 'Leader Phone Number must be exactly 11 digits without dashes.');
+    if (leaderPhone.length !== 11 || !leaderPhone.startsWith('03')) {
+      setErrorMessage(isDroneWorkshop ? 'Phone Number must start with 03 and be exactly 11 digits.' : 'Leader Phone Number must start with 03 and be exactly 11 digits.');
       return;
     }
-    if (leaderWhatsapp && leaderWhatsapp.length !== 11) {
-      setErrorMessage(isDroneWorkshop ? 'WhatsApp Number must be exactly 11 digits without dashes.' : 'Leader WhatsApp Number must be exactly 11 digits without dashes.');
+    if (leaderWhatsapp && (leaderWhatsapp.length !== 11 || !leaderWhatsapp.startsWith('03'))) {
+      setErrorMessage(isDroneWorkshop ? 'WhatsApp Number must start with 03 and be exactly 11 digits.' : 'Leader WhatsApp Number must start with 03 and be exactly 11 digits.');
       return;
     }
 
@@ -437,12 +450,21 @@ export default function RegistrationPage({
         email: leaderEmail,
         phone: leaderPhone,
         whatsapp: leaderWhatsapp || leaderPhone,
-        city: leaderCity,
+        city: leaderCity === 'Other' ? leaderCityOther : leaderCity,
         university: leaderUniversity,
         degree: leaderDegree,
         semester: leaderSemester
       },
-      members: members.slice(0, requiredMemberCount),
+      members: members.slice(0, requiredMemberCount).map(m => ({
+        fullName: m.fullName,
+        fatherName: m.fatherName,
+        gender: m.gender,
+        cnic: m.cnic,
+        city: m.city === 'Other' ? m.otherCity : m.city,
+        university: m.university,
+        degree: m.degree,
+        semester: m.semester
+      })),
       declarationAccepted: true,
       status: 'Pending Review'
     };
@@ -475,12 +497,12 @@ export default function RegistrationPage({
       setErrorMessage('CNIC must be exactly 13 digits without dashes.');
       return;
     }
-    if (ambPhone.length !== 11) {
-      setErrorMessage('Phone Number must be exactly 11 digits without dashes.');
+    if (ambPhone.length !== 11 || !ambPhone.startsWith('03')) {
+      setErrorMessage('Phone Number must start with 03 and be exactly 11 digits.');
       return;
     }
-    if (ambWhatsapp && ambWhatsapp.length !== 11) {
-      setErrorMessage('WhatsApp Number must be exactly 11 digits without dashes.');
+    if (ambWhatsapp && (ambWhatsapp.length !== 11 || !ambWhatsapp.startsWith('03'))) {
+      setErrorMessage('WhatsApp Number must start with 03 and be exactly 11 digits.');
       return;
     }
 
@@ -503,7 +525,7 @@ export default function RegistrationPage({
       email: ambEmail,
       phone: ambPhone,
       whatsapp: ambWhatsapp || ambPhone,
-      city: ambCity,
+      city: ambCity === 'Other' ? ambCityOther : ambCity,
       university: ambUniversity,
       degree: ambDegree,
       semester: ambSemester,
@@ -545,17 +567,19 @@ export default function RegistrationPage({
           </div>
 
           {/* Fee Payment Notice */}
-          <div className="p-5 rounded-2xl bg-amber-950/40 border border-amber-700/50 text-left flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 mt-0.5">
-              <Info className="w-5 h-5 text-amber-400" />
+          {submittedData.type === 'team' && (
+            <div className="p-5 rounded-2xl bg-amber-950/40 border border-amber-700/50 text-left flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 mt-0.5">
+                <Info className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-amber-300 text-sm mb-1">Important — Fee Payment Required to Confirm Registration</h3>
+                <p className="text-amber-200/80 text-xs leading-relaxed">
+                  Your registration is recorded but <strong className="text-amber-300">not yet confirmed</strong>. The Team Leader will be contacted by the HURC organizing team and a <strong className="text-amber-300">fee challan will be shared</strong>. To complete and confirm your registration, the team must pay the required fee within the given deadline.
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-amber-300 text-sm mb-1">Important — Fee Payment Required to Confirm Registration</h3>
-              <p className="text-amber-200/80 text-xs leading-relaxed">
-                Your registration is recorded but <strong className="text-amber-300">not yet confirmed</strong>. The Team Leader will be contacted by the HURC organizing team and a <strong className="text-amber-300">fee challan will be shared</strong>. To complete and confirm your registration, the team must pay the required fee within the given deadline.
-              </p>
-            </div>
-          </div>
+          )}
 
           {/* Contact Details */}
           <div className="p-5 rounded-2xl bg-[#1f1109] border border-orange-900/50 text-left flex items-start gap-4">
@@ -753,23 +777,36 @@ export default function RegistrationPage({
               </div>
             </div>
 
-            <div className={`grid grid-cols-1 ${isDroneWorkshop ? '' : 'sm:grid-cols-2'} gap-4`}>
+            {isDroneWorkshop ? (
               <div>
                 <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                  {isDroneWorkshop ? 'Participant Name / Nickname' : 'Team Name'} <span className="text-orange-500">*</span>
+                  Team Name <span className="text-stone-500 text-xs font-normal">(Optional)</span>
                 </label>
                 <input
                   type="text"
-                  required
                   id="input-team-name"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
-                  placeholder={isDroneWorkshop ? "e.g. Ali Khan" : "e.g. Mecha Warriors"}
+                  placeholder="e.g. Team Alpha (optional)"
                   className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                 />
               </div>
-
-              {!isDroneWorkshop && (
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                    Team Name <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    id="input-team-name"
+                    value={teamName}
+                    onChange={(e) => setTeamName(e.target.value)}
+                    placeholder="e.g. Mecha Warriors"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                  />
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-stone-300 mb-1.5">
                     Total Team Members (Leader + Members: 3 to 5) <span className="text-orange-500">*</span>
@@ -785,8 +822,8 @@ export default function RegistrationPage({
                     <option value={5}>5 Members (Leader + 4 Members)</option>
                   </select>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* STEP 3: Team Leader - Personal Information */}
@@ -949,15 +986,28 @@ export default function RegistrationPage({
                   <label className="block text-xs font-semibold text-stone-300 mb-1.5">
                     City <span className="text-orange-500">*</span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     required
                     id="input-leader-city"
                     value={leaderCity}
                     onChange={(e) => setLeaderCity(e.target.value)}
-                    placeholder="e.g. Karachi"
                     className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                  />
+                  >
+                    <option value="" disabled>Select City</option>
+                    {PAKISTAN_CITIES.map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                  {leaderCity === 'Other' && (
+                    <input
+                      type="text"
+                      required
+                      value={leaderCityOther}
+                      onChange={(e) => setLeaderCityOther(e.target.value)}
+                      placeholder="Please specify your city"
+                      className="w-full px-4 py-2.5 mt-3 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -1009,7 +1059,7 @@ export default function RegistrationPage({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                    Current Semester / Year <span className="text-orange-500">*</span>
+                    Current Semester / Class <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -1017,7 +1067,7 @@ export default function RegistrationPage({
                     id="input-leader-semester"
                     value={leaderSemester}
                     onChange={(e) => setLeaderSemester(e.target.value)}
-                    placeholder="e.g. 4th Semester / 2nd Year"
+                    placeholder="e.g. 4th Semester / A Level"
                     className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                   />
                 </div>
@@ -1128,14 +1178,27 @@ export default function RegistrationPage({
                         <label className="block text-xs font-semibold text-stone-300 mb-1.5">
                           City <span className="text-orange-500">*</span>
                         </label>
-                        <input
-                          type="text"
+                        <select
                           required
                           value={memData.city}
                           onChange={(e) => updateMember(idx, 'city', e.target.value)}
-                          placeholder="e.g. Karachi"
                           className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                        />
+                        >
+                          <option value="" disabled>Select City</option>
+                          {PAKISTAN_CITIES.map(city => (
+                            <option key={city} value={city}>{city}</option>
+                          ))}
+                        </select>
+                        {memData.city === 'Other' && (
+                          <input
+                            type="text"
+                            required
+                            value={memData.otherCity || ''}
+                            onChange={(e) => updateMember(idx, 'otherCity', e.target.value)}
+                            placeholder="Please specify your city"
+                            className="w-full px-4 py-2.5 mt-3 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                          />
+                        )}
                       </div>
 
                       <div>
@@ -1168,14 +1231,14 @@ export default function RegistrationPage({
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                            Current Semester / Year <span className="text-orange-500">*</span>
+                            Current Semester / Class <span className="text-orange-500">*</span>
                           </label>
                           <input
                             type="text"
                             required
                             value={memData.semester}
                             onChange={(e) => updateMember(idx, 'semester', e.target.value)}
-                            placeholder="e.g. 4th Semester"
+                            placeholder="e.g. 4th Semester / A Level"
                             className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                           />
                         </div>
@@ -1318,8 +1381,9 @@ export default function RegistrationPage({
                   type="tel"
                   required
                   value={ambPhone}
-                  onChange={(e) => setAmbPhone(e.target.value)}
-                  placeholder="03XXXXXXXXX"
+                  onChange={(e) => setAmbPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                  placeholder="03XXXXXXXXX (11 digits)"
+                  maxLength={11}
                   className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                 />
               </div>
@@ -1343,14 +1407,27 @@ export default function RegistrationPage({
                 <label className="block text-xs font-semibold text-stone-300 mb-1.5">
                   City <span className="text-orange-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   required
                   value={ambCity}
                   onChange={(e) => setAmbCity(e.target.value)}
-                  placeholder="e.g. Karachi / Lahore / Islamabad"
                   className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                />
+                >
+                  <option value="" disabled>Select City</option>
+                  {PAKISTAN_CITIES.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+                {ambCity === 'Other' && (
+                  <input
+                    type="text"
+                    required
+                    value={ambCityOther}
+                    onChange={(e) => setAmbCityOther(e.target.value)}
+                    placeholder="Please specify your city"
+                    className="w-full px-4 py-2.5 mt-3 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                  />
+                )}
               </div>
             </div>
 
@@ -1370,16 +1447,30 @@ export default function RegistrationPage({
               </div>
               <div>
                 <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                  LinkedIn / Social Profile Link
+                  Current Semester / Class <span className="text-orange-500">*</span>
                 </label>
                 <input
-                  type="url"
-                  value={ambSocialLink}
-                  onChange={(e) => setAmbSocialLink(e.target.value)}
-                  placeholder="https://linkedin.com/in/..."
+                  type="text"
+                  required
+                  value={ambSemester}
+                  onChange={(e) => setAmbSemester(e.target.value)}
+                  placeholder="e.g. 4th Semester / A Level"
                   className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                LinkedIn / Social Profile Link
+              </label>
+              <input
+                type="url"
+                value={ambSocialLink}
+                onChange={(e) => setAmbSocialLink(e.target.value)}
+                placeholder="https://linkedin.com/in/..."
+                className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+              />
             </div>
 
             <div>
