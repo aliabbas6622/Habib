@@ -1247,10 +1247,19 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
 
             {viewingDetailItem.type === 'team' ? (
               <div className="space-y-4 text-xs">
-                {/* Modules */}
+                {/* Modules + Meta */}
                 <div className="p-3 rounded-xl bg-[#140b06] border border-amber-950/60">
-                  <span className="text-stone-400 uppercase font-semibold block mb-1">Registered Modules</span>
-                  <div className="flex flex-wrap gap-1.5">
+                  <span className="text-stone-400 uppercase font-semibold block mb-1">Registration Info</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-stone-300">
+                    <div>ID: <strong className="text-orange-400 font-mono">{viewingDetailItem.id}</strong></div>
+                    <div>Date: <strong>{(viewingDetailItem as TeamRegistrationData).timestamp}</strong></div>
+                    <div>Status: <strong>{viewingDetailItem.status}</strong></div>
+                    <div>Members: <strong>{(viewingDetailItem as TeamRegistrationData).memberCount}</strong></div>
+                    {(viewingDetailItem as TeamRegistrationData).promoCode && (
+                      <div className="sm:col-span-2">Promo Code: <strong className="text-emerald-400">{(viewingDetailItem as TeamRegistrationData).promoCode}</strong></div>
+                    )}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
                     {(viewingDetailItem as TeamRegistrationData).selectedModules.map(m => (
                       <span key={m} className="px-2 py-1 rounded bg-orange-950/70 border border-orange-800 text-orange-300 font-bold">
                         {modules.find(mod => mod.id === m)?.title || m}
@@ -1265,14 +1274,18 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                     Team Leader
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-stone-300 break-words">
-                    <div>Name: <strong className="text-white">{(viewingDetailItem as TeamRegistrationData).leader.fullName}</strong></div>
-                    <div>Father: <strong>{(viewingDetailItem as TeamRegistrationData).leader.fatherName}</strong></div>
-                    <div>CNIC: <strong>{(viewingDetailItem as TeamRegistrationData).leader.cnic}</strong></div>
-                    <div>Email: <strong>{(viewingDetailItem as TeamRegistrationData).leader.email}</strong></div>
-                    <div>Phone: <strong>{(viewingDetailItem as TeamRegistrationData).leader.phone}</strong></div>
-                    <div>WhatsApp: <strong>{(viewingDetailItem as TeamRegistrationData).leader.whatsapp}</strong></div>
-                    <div>City: <strong>{(viewingDetailItem as TeamRegistrationData).leader.city}</strong></div>
-                    <div>Institute: <strong>{(viewingDetailItem as TeamRegistrationData).leader.university}</strong></div>
+                    <div>Name: <strong className="text-white">{(viewingDetailItem as TeamRegistrationData).leader.fullName || '—'}</strong></div>
+                    <div>Father: <strong>{(viewingDetailItem as TeamRegistrationData).leader.fatherName || '—'}</strong></div>
+                    <div>Gender: <strong>{(viewingDetailItem as TeamRegistrationData).leader.gender || '—'}</strong></div>
+                    <div>CNIC: <strong>{(viewingDetailItem as TeamRegistrationData).leader.cnic || '—'}</strong></div>
+                    <div>Student ID: <strong>{(viewingDetailItem as TeamRegistrationData).leader.studentId || '—'}</strong></div>
+                    <div>Email: <strong>{(viewingDetailItem as TeamRegistrationData).leader.email || '—'}</strong></div>
+                    <div>Phone: <strong>{(viewingDetailItem as TeamRegistrationData).leader.phone || '—'}</strong></div>
+                    <div>WhatsApp: <strong>{(viewingDetailItem as TeamRegistrationData).leader.whatsapp || '—'}</strong></div>
+                    <div>City: <strong>{(viewingDetailItem as TeamRegistrationData).leader.city || '—'}</strong></div>
+                    <div>Institute: <strong>{(viewingDetailItem as TeamRegistrationData).leader.university || '—'}</strong></div>
+                    <div>Degree: <strong>{(viewingDetailItem as TeamRegistrationData).leader.degree || '—'}</strong></div>
+                    <div>Semester: <strong>{(viewingDetailItem as TeamRegistrationData).leader.semester || '—'}</strong></div>
                   </div>
                 </div>
 
@@ -1281,14 +1294,19 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                   <span className="text-stone-400 uppercase font-semibold block">
                     Team Members ({(viewingDetailItem as TeamRegistrationData).members.length})
                   </span>
+                  {(viewingDetailItem as TeamRegistrationData).members.length === 0 && (
+                    <p className="text-stone-500 italic text-[11px]">No additional members recorded.</p>
+                  )}
                   {(viewingDetailItem as TeamRegistrationData).members.map((m, idx) => (
                     <div key={idx} className="p-3 rounded-xl bg-[#140b06] border border-amber-950/60 space-y-1">
-                      <div className="font-bold text-orange-400">#{idx + 2} {m.fullName} ({m.gender})</div>
+                      <div className="font-bold text-orange-400">#{idx + 2} {m.fullName || '—'} {m.gender ? `(${m.gender})` : ''}</div>
                       <div className="text-stone-400 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] break-words">
-                        <div>CNIC: {m.cnic}</div>
-                        <div>University: {m.university}</div>
-                        <div>Program: {m.degree} ({m.semester})</div>
-                        <div>City: {m.city}</div>
+                        <div>Father: {m.fatherName || '—'}</div>
+                        <div>CNIC: {m.cnic || '—'}</div>
+                        <div>City: {m.city || '—'}</div>
+                        <div>University: {m.university || '—'}</div>
+                        <div>Degree: {m.degree || '—'}</div>
+                        <div>Semester: {m.semester || '—'}</div>
                       </div>
                     </div>
                   ))}
@@ -1296,20 +1314,43 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
               </div>
             ) : (
               <div className="space-y-4 text-xs">
+                {/* Ambassador Meta */}
+                <div className="p-3 rounded-xl bg-[#140b06] border border-amber-950/60">
+                  <span className="text-stone-400 uppercase font-semibold block mb-1">Registration Info</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-stone-300">
+                    <div>ID: <strong className="text-orange-400 font-mono">{viewingDetailItem.id}</strong></div>
+                    <div>Date: <strong>{(viewingDetailItem as AmbassadorRegistrationData).timestamp}</strong></div>
+                    <div>Status: <strong>{viewingDetailItem.status}</strong></div>
+                  </div>
+                </div>
+
                 <div className="p-4 rounded-xl bg-[#140b06] border border-amber-950/60 space-y-2">
                   <span className="text-orange-400 font-bold uppercase block border-b border-amber-950 pb-1">
                     Ambassador Details
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-stone-300 break-words">
-                    <div>Name: <strong className="text-white">{(viewingDetailItem as AmbassadorRegistrationData).fullName}</strong></div>
-                    <div>CNIC: <strong>{(viewingDetailItem as AmbassadorRegistrationData).cnic}</strong></div>
-                    <div>Email: <strong>{(viewingDetailItem as AmbassadorRegistrationData).email}</strong></div>
-                    <div>Phone: <strong>{(viewingDetailItem as AmbassadorRegistrationData).phone}</strong></div>
-                    <div>University: <strong>{(viewingDetailItem as AmbassadorRegistrationData).university}</strong></div>
+                    <div>Name: <strong className="text-white">{(viewingDetailItem as AmbassadorRegistrationData).fullName || '—'}</strong></div>
+                    <div>Father: <strong>{(viewingDetailItem as AmbassadorRegistrationData).fatherName || '—'}</strong></div>
+                    <div>Gender: <strong>{(viewingDetailItem as AmbassadorRegistrationData).gender || '—'}</strong></div>
+                    <div>CNIC: <strong>{(viewingDetailItem as AmbassadorRegistrationData).cnic || '—'}</strong></div>
+                    <div>Email: <strong>{(viewingDetailItem as AmbassadorRegistrationData).email || '—'}</strong></div>
+                    <div>Phone: <strong>{(viewingDetailItem as AmbassadorRegistrationData).phone || '—'}</strong></div>
+                    <div>WhatsApp: <strong>{(viewingDetailItem as AmbassadorRegistrationData).whatsapp || '—'}</strong></div>
+                    <div>City: <strong>{(viewingDetailItem as AmbassadorRegistrationData).city || '—'}</strong></div>
+                    <div>University: <strong>{(viewingDetailItem as AmbassadorRegistrationData).university || '—'}</strong></div>
+                    <div>Degree: <strong>{(viewingDetailItem as AmbassadorRegistrationData).degree || '—'}</strong></div>
+                    <div>Semester: <strong>{(viewingDetailItem as AmbassadorRegistrationData).semester || '—'}</strong></div>
+                    <div className="sm:col-span-2">Social / LinkedIn: <strong className="text-blue-400 break-all">{(viewingDetailItem as AmbassadorRegistrationData).socialLink || '—'}</strong></div>
                   </div>
-                  <div className="mt-3 pt-2 border-t border-amber-950">
-                    <span className="text-stone-400 font-semibold block">Motivation &amp; Strategy:</span>
-                    <p className="text-stone-200 mt-1 italic">{(viewingDetailItem as AmbassadorRegistrationData).motivation}</p>
+                  <div className="mt-3 pt-2 border-t border-amber-950 space-y-3">
+                    <div>
+                      <span className="text-stone-400 font-semibold block mb-1">Motivation &amp; Strategy:</span>
+                      <p className="text-stone-200 italic leading-relaxed">{(viewingDetailItem as AmbassadorRegistrationData).motivation || '—'}</p>
+                    </div>
+                    <div>
+                      <span className="text-stone-400 font-semibold block mb-1">Past Experience:</span>
+                      <p className="text-stone-200 italic leading-relaxed">{(viewingDetailItem as AmbassadorRegistrationData).pastExperience || '—'}</p>
+                    </div>
                   </div>
                 </div>
               </div>
