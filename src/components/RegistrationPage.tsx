@@ -57,6 +57,7 @@ export default function RegistrationPage({
   // Team Form State
   const [teamName, setTeamName] = useState('');
   const [memberCount, setMemberCount] = useState<number>(3); // 3, 4, or 5
+  const [promoCode, setPromoCode] = useState('');
 
   // Team Leader State (Pre-filled with logged-in user if available)
   const [leaderFullName, setLeaderFullName] = useState(userProfile?.displayName || '');
@@ -274,6 +275,9 @@ export default function RegistrationPage({
           .map(m => modules.find(mod => mod.id === m)?.title || m)
           .join(', ')
       );
+      if (teamData.promoCode) {
+        addRow('Promo Code', teamData.promoCode);
+      }
       y += 4;
       addDivider();
 
@@ -441,6 +445,7 @@ export default function RegistrationPage({
       selectedModules,
       teamName,
       memberCount: actualMemberCount,
+      promoCode: promoCode.trim() || undefined,
       leader: {
         fullName: leaderFullName,
         fatherName: leaderFatherName,
@@ -821,6 +826,19 @@ export default function RegistrationPage({
                     <option value={4}>4 Members (Leader + 3 Members)</option>
                     <option value={5}>5 Members (Leader + 4 Members)</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                    Promo Code <span className="text-stone-500 text-xs font-normal">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="input-promo-code"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    placeholder="e.g. HURC50"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                  />
                 </div>
               </div>
             )}

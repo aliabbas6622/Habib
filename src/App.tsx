@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import ModulesGrid from './components/ModulesGrid';
-import StudentBodySection from './components/StudentBodySection';
 import BottomCtaSection from './components/BottomCtaSection';
 import Footer from './components/Footer';
-import RegistrationPage from './components/RegistrationPage';
-import ModuleDetailView from './components/ModuleDetailView';
-import AdminPortalPage from './components/AdminPortalPage';
 import AuthModal from './components/AuthModal';
+
+// Lazy load components that are not needed on initial render
+const StudentBodySection = lazy(() => import('./components/StudentBodySection'));
+const RegistrationPage = lazy(() => import('./components/RegistrationPage'));
+const ModuleDetailView = lazy(() => import('./components/ModuleDetailView'));
+const AdminPortalPage = lazy(() => import('./components/AdminPortalPage'));
 import { useAuth } from './context/AuthContext';
 import { useCompetition } from './context/CompetitionContext';
 import { TeamRegistrationData, AmbassadorRegistrationData } from './types';
@@ -97,46 +99,48 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1">
-        {currentView === 'home' && (
-          <div className="animate-in fade-in duration-300">
-            <HeroSection onRegisterClick={() => navigateToRegister()} />
-            <ModulesGrid onSelectModule={navigateToModule} />
-            <BottomCtaSection onRegisterClick={() => navigateToRegister()} />
-          </div>
-        )}
+        <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center text-orange-500">Loading...</div>}>
+          {currentView === 'home' && (
+            <div className="animate-in fade-in duration-300">
+              <HeroSection onRegisterClick={() => navigateToRegister()} />
+              <ModulesGrid onSelectModule={navigateToModule} />
+              <BottomCtaSection onRegisterClick={() => navigateToRegister()} />
+            </div>
+          )}
 
-        {currentView === 'student-body' && (
-          <div className="animate-in fade-in duration-300">
-            <StudentBodySection />
-          </div>
-        )}
+          {currentView === 'student-body' && (
+            <div className="animate-in fade-in duration-300">
+              <StudentBodySection />
+            </div>
+          )}
 
-        {currentView === 'register' && (
-          <div className="animate-in fade-in duration-300">
-            <RegistrationPage
-              onBackToHome={navigateToHome}
-              initialSelectedModuleId={preSelectedRegisterModule}
-              onSaveRegistration={handleSaveRegistration}
-            />
-          </div>
-        )}
+          {currentView === 'register' && (
+            <div className="animate-in fade-in duration-300">
+              <RegistrationPage
+                onBackToHome={navigateToHome}
+                initialSelectedModuleId={preSelectedRegisterModule}
+                onSaveRegistration={handleSaveRegistration}
+              />
+            </div>
+          )}
 
-        {currentView === 'module-detail' && (
-          <div className="animate-in fade-in duration-300">
-            <ModuleDetailView
-              currentModuleSlug={selectedModuleSlug}
-              onSelectModule={navigateToModule}
-              onBackToHome={navigateToHome}
-              onRegisterForModule={(modId) => navigateToRegister(modId)}
-            />
-          </div>
-        )}
+          {currentView === 'module-detail' && (
+            <div className="animate-in fade-in duration-300">
+              <ModuleDetailView
+                currentModuleSlug={selectedModuleSlug}
+                onSelectModule={navigateToModule}
+                onBackToHome={navigateToHome}
+                onRegisterForModule={(modId) => navigateToRegister(modId)}
+              />
+            </div>
+          )}
 
-        {currentView === 'admin' && (
-          <div className="animate-in fade-in duration-300">
-            <AdminPortalPage onBackToHome={navigateToHome} />
-          </div>
-        )}
+          {currentView === 'admin' && (
+            <div className="animate-in fade-in duration-300">
+              <AdminPortalPage onBackToHome={navigateToHome} />
+            </div>
+          )}
+        </Suspense>
       </main>
 
       {/* Footer */}

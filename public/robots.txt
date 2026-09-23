@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://hurc2026.example.com/sitemap.xml

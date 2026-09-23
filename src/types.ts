@@ -62,10 +62,11 @@ export interface TeamLeader extends TeamMember {
 export interface TeamRegistrationData {
   id: string;
   timestamp: string;
-  type: 'team' | 'ambassador';
+  type: 'team';
   selectedModules: string[];
   teamName: string;
   memberCount: number;
+  promoCode?: string;
   leader: TeamLeader;
   members: TeamMember[];
   declarationAccepted: boolean;
