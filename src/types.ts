@@ -70,6 +70,7 @@ export interface TeamRegistrationData {
   leader: TeamLeader;
   members: TeamMember[];
   declarationAccepted: boolean;
+  ambassadorCode?: string;
   status: 'Pending Review' | 'Verified' | 'Approved' | 'Rejected';
 }
 

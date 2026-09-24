@@ -407,11 +407,11 @@ export default function RegistrationPage({
       return;
     }
     if (leaderPhone.length !== 11 || !leaderPhone.startsWith('03')) {
-      setErrorMessage(isDroneWorkshop ? 'Phone Number must start with 03 and be exactly 11 digits.' : 'Leader Phone Number must start with 03 and be exactly 11 digits.');
+      setErrorMessage(isDroneWorkshop ? 'Phone Number must be exactly 11 digits and start with 03.' : 'Leader Phone Number must be exactly 11 digits and start with 03.');
       return;
     }
     if (leaderWhatsapp && (leaderWhatsapp.length !== 11 || !leaderWhatsapp.startsWith('03'))) {
-      setErrorMessage(isDroneWorkshop ? 'WhatsApp Number must start with 03 and be exactly 11 digits.' : 'Leader WhatsApp Number must start with 03 and be exactly 11 digits.');
+      setErrorMessage(isDroneWorkshop ? 'WhatsApp Number must be exactly 11 digits and start with 03.' : 'Leader WhatsApp Number must be exactly 11 digits and start with 03.');
       return;
     }
 
@@ -503,11 +503,11 @@ export default function RegistrationPage({
       return;
     }
     if (ambPhone.length !== 11 || !ambPhone.startsWith('03')) {
-      setErrorMessage('Phone Number must start with 03 and be exactly 11 digits.');
+      setErrorMessage('Phone Number must be exactly 11 digits and start with 03.');
       return;
     }
     if (ambWhatsapp && (ambWhatsapp.length !== 11 || !ambWhatsapp.startsWith('03'))) {
-      setErrorMessage('WhatsApp Number must start with 03 and be exactly 11 digits.');
+      setErrorMessage('WhatsApp Number must be exactly 11 digits and start with 03.');
       return;
     }
 
@@ -1399,9 +1399,8 @@ export default function RegistrationPage({
                   type="tel"
                   required
                   value={ambPhone}
-                  onChange={(e) => setAmbPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                  placeholder="03XXXXXXXXX (11 digits)"
-                  maxLength={11}
+                  onChange={(e) => setAmbPhone(e.target.value)}
+                  placeholder="03XXXXXXXXX"
                   className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
                 />
               </div>
