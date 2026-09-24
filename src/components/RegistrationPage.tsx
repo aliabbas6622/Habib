@@ -612,12 +612,12 @@ export default function RegistrationPage({
             </div>
             <div>
               <h3 className="font-bold text-white text-sm mb-1">For Further Queries</h3>
-              <p className="text-stone-400 text-xs mb-1">Contact our organizing team directly:</p>
+              <p className="text-stone-400 text-xs mb-1">Contact our organizing team directly. If you are not contacted within 5 days, please call this number:</p>
               <a
-                href="tel:03218268445"
+                href="tel:03218269445"
                 className="text-orange-400 font-bold text-base hover:text-orange-300 transition-colors"
               >
-                0321-826-8445
+                0321-826-9445
               </a>
             </div>
           </div>

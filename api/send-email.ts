@@ -21,6 +21,8 @@ const firebaseConfig = {
   appId: '1:1002527620901:web:4faa21ff22ec70ff0ce4cc'
 };
 
+const FIRESTORE_DB_ID = '(default)';
+
 // Simple in-memory rate limit: max 20 emails per warm function instance per minute
 const rateBucket: Record<string, { count: number; reset: number }> = {};
 const RATE_LIMIT = 20;
@@ -60,7 +62,7 @@ export default async function handler(req: any, res: any) {
     // The password comes either from a Vercel env var (production flows) or from the
     // transient x-hurc-smtp-pass header (admin dashboard test only — used once, not stored).
     const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    const db = getFirestore(app);
+    const db = getFirestore(app, FIRESTORE_DB_ID);
     const snap = await getDoc(doc(db, 'settings', 'competition_config'));
     const settings = snap.exists() ? (snap.data() as any) : {};
 
