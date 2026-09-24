@@ -1,11 +1,8 @@
 {
-  "firestore": [
-    {
-      "database": "ai-studio-hurc2026habibuni-79423bea-b0a9-4ae5-a7c0-6f289b1e69a3",
-      "rules": "firestore.rules",
-      "indexes": "firestore.indexes.json"
-    }
-  ],
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
   "hosting": {
     "public": "dist",
     "ignore": [
