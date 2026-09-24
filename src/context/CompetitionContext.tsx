@@ -468,8 +468,14 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
         collection(db, 'registrations'),
         (snapshot) => {
           if (databaseClearedLocally.current) {
-            // Ignore incoming snapshots because the admin cleared the database locally
-            return;
+            if (snapshot.empty) {
+              // The clear just propagated — still empty, keep ignoring
+              return;
+            }
+            // New registrations have arrived from the cloud (another device submitted).
+            // The clear is no longer relevant — resume normal sync.
+            databaseClearedLocally.current = false;
+            try { localStorage.removeItem('HURC_DB_CLEARED'); } catch {}
           }
 
           const list: (TeamRegistrationData | AmbassadorRegistrationData)[] = [];
@@ -624,6 +630,11 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
     });
 
     // 4. Save to Firestore
+    // Also reset the "database was cleared" flag — the user is actively writing
+    // new data and expects cloud sync to be live again.
+    databaseClearedLocally.current = false;
+    try { localStorage.removeItem('HURC_DB_CLEARED'); } catch {}
+
     try {
       await setDoc(
         doc(db, 'registrations', data.id),
