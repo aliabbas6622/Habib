@@ -21,7 +21,7 @@ export default function App() {
   const [preSelectedRegisterModule, setPreSelectedRegisterModule] = useState<string | undefined>(undefined);
 
   const { isAuthModalOpen, closeAuthModal, authModalMode } = useAuth();
-  const { saveRegistration, settings } = useCompetition();
+  const { settings } = useCompetition();
 
   // Sync hash routing e.g. #/modules/robo-soccer, #/register, #/admin, #/
   useEffect(() => {
@@ -81,8 +81,10 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSaveRegistration = (item: TeamRegistrationData | AmbassadorRegistrationData) => {
-    saveRegistration(item);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleSaveRegistration = (_item: TeamRegistrationData | AmbassadorRegistrationData) => {
+    // RegistrationPage already calls saveRegistration() internally before firing this
+    // callback — calling it here a second time would create a duplicate Firestore write.
   };
 
   return (

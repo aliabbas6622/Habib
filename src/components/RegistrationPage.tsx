@@ -352,6 +352,14 @@ export default function RegistrationPage({
   // Handle Module Toggle with standalone constraint
   const handleToggleModule = (modId: string) => {
     setErrorMessage(null);
+
+    // Block selecting a closed module
+    const mod = modules.find(m => m.id === modId);
+    if (mod && !mod.isOpen) {
+      setErrorMessage(`"${mod.title}" registrations are currently closed (waitlist only). Please select another module.`);
+      return;
+    }
+
     if (modId === 'drone-workshop') {
       if (selectedModules.includes('drone-workshop')) {
         setSelectedModules([]);
@@ -389,6 +397,17 @@ export default function RegistrationPage({
 
     if (selectedModules.length === 0) {
       setErrorMessage('Please select at least one competition module or workshop.');
+      return;
+    }
+
+    // Guard: reject if any selected module has been closed by admin
+    const closedSelected = selectedModules.filter(id => {
+      const m = modules.find(mod => mod.id === id);
+      return m && !m.isOpen;
+    });
+    if (closedSelected.length > 0) {
+      const closedNames = closedSelected.map(id => modules.find(m => m.id === id)?.title || id).join(', ');
+      setErrorMessage(`Registration is currently closed for: ${closedNames}. Please deselect those modules before submitting.`);
       return;
     }
 
@@ -724,29 +743,32 @@ export default function RegistrationPage({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-4">
               {modules.map((mod) => {
                 const isSelected = selectedModules.includes(mod.id);
+                const isClosed = !mod.isOpen;
                 return (
                   <div
                     key={mod.id}
                     id={`checkbox-mod-${mod.id}`}
-                    onClick={() => handleToggleModule(mod.id)}
-                    className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all ${
-                      isSelected
-                        ? 'bg-[#29160c] border-orange-500/70 shadow-[0_0_15px_rgba(249,115,22,0.15)]'
-                        : 'bg-[#150c07] border-amber-950/70 hover:border-amber-800/80 hover:bg-[#1d1009]'
+                    onClick={() => !isClosed && handleToggleModule(mod.id)}
+                    className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 transition-all ${
+                      isClosed
+                        ? 'bg-[#120806] border-red-950/60 opacity-60 cursor-not-allowed'
+                        : isSelected
+                          ? 'bg-[#29160c] border-orange-500/70 shadow-[0_0_15px_rgba(249,115,22,0.15)] cursor-pointer'
+                          : 'bg-[#150c07] border-amber-950/70 hover:border-amber-800/80 hover:bg-[#1d1009] cursor-pointer'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {isSelected ? (
                         <CheckSquare className="w-5 h-5 text-orange-500 shrink-0" />
                       ) : (
-                        <Square className="w-5 h-5 text-stone-600 shrink-0" />
+                        <Square className={`w-5 h-5 shrink-0 ${isClosed ? 'text-red-900/60' : 'text-stone-600'}`} />
                       )}
                       <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-semibold text-stone-200 leading-snug">
+                        <span className={`text-sm font-semibold leading-snug ${isClosed ? 'text-stone-500' : 'text-stone-200'}`}>
                           {mod.title}
                         </span>
                         <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
-                          <span className="text-xs font-bold text-orange-400 whitespace-nowrap">
+                          <span className={`text-xs font-bold whitespace-nowrap ${isClosed ? 'text-stone-600' : 'text-orange-400'}`}>
                             PKR {mod.registrationFeePKR.toLocaleString()}
                           </span>
                           {mod.isStandalone && (
@@ -758,9 +780,9 @@ export default function RegistrationPage({
                       </div>
                     </div>
 
-                    {!mod.isOpen && (
+                    {isClosed && (
                       <span className="text-[10px] font-bold text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-900 shrink-0">
-                        WAITLIST
+                        CLOSED
                       </span>
                     )}
                   </div>
