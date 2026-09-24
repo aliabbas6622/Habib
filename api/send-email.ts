@@ -13,15 +13,13 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || 'AIzaSyAjaAkBqSJy4BHCVtpcbxmu3vxkHhjFDGg',
-  authDomain: 'go-ka-466915.firebaseapp.com',
-  projectId: 'go-ka-466915',
-  storageBucket: 'go-ka-466915.firebasestorage.app',
-  messagingSenderId: '789605433244',
-  appId: '1:789605433244:web:155127201a05256bc85259'
+  apiKey: process.env.FIREBASE_API_KEY || 'AIzaSyBs1XXD1159mjIAeHBjOp8ZqJd5l8dpqUY',
+  authDomain: 'hurc2026-prod-db.firebaseapp.com',
+  projectId: 'hurc2026-prod-db',
+  storageBucket: 'hurc2026-prod-db.firebasestorage.app',
+  messagingSenderId: '1002527620901',
+  appId: '1:1002527620901:web:4faa21ff22ec70ff0ce4cc'
 };
-
-const FIRESTORE_DB_ID = 'ai-studio-hurc2026habibuni-79423bea-b0a9-4ae5-a7c0-6f289b1e69a3';
 
 // Simple in-memory rate limit: max 20 emails per warm function instance per minute
 const rateBucket: Record<string, { count: number; reset: number }> = {};
@@ -62,7 +60,7 @@ export default async function handler(req: any, res: any) {
     // The password comes either from a Vercel env var (production flows) or from the
     // transient x-hurc-smtp-pass header (admin dashboard test only — used once, not stored).
     const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    const db = getFirestore(app, FIRESTORE_DB_ID);
+    const db = getFirestore(app);
     const snap = await getDoc(doc(db, 'settings', 'competition_config'));
     const settings = snap.exists() ? (snap.data() as any) : {};
 
