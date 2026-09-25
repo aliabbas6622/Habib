@@ -235,15 +235,42 @@ export default function ModuleDetailView({
           {currentModule.tagline}
         </p>
 
-        {/* Registration fee only */}
-        <div className="mt-5">
-          <div className="inline-block p-3 rounded-xl bg-[#140b06] border border-amber-950/70">
-            <span className="text-[10px] uppercase tracking-wider text-stone-500 font-bold block">Registration Fee</span>
-            <span className="text-sm font-bold text-orange-400">
-              {registrationFee ? `PKR ${registrationFee.toLocaleString()} per team` : 'See registration portal'}
-            </span>
+        {/* Early Bird Registration Fee */}
+        {registrationFee && (
+          <div className="mt-5">
+            <div className="inline-flex flex-col gap-1.5 p-4 rounded-2xl bg-gradient-to-br from-[#1f0f06] to-[#140b04] border border-orange-500/40 shadow-[0_0_20px_rgba(249,115,22,0.15)] relative overflow-hidden">
+              {/* Glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-amber-500/5 pointer-events-none" />
+              {/* Early Bird Badge */}
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500" />
+                </span>
+                <span className="text-[10px] uppercase tracking-widest font-black text-orange-400">🎯 Early Bird Price</span>
+              </div>
+              {/* Prices */}
+              <div className="flex items-baseline gap-3 mt-0.5">
+                <span className="text-xl font-black text-white">PKR {registrationFee.toLocaleString()}</span>
+                <span className="text-xs text-stone-500 line-through">
+                  PKR {(registrationFee === 4000 ? 5000 : 4500).toLocaleString()}
+                </span>
+              </div>
+              <span className="text-[10px] text-stone-400">per team · limited time offer</span>
+              <p className="text-[10px] text-amber-400/80 font-semibold mt-1">
+                ⚡ Register now to lock in this price — it won't last!
+              </p>
+            </div>
           </div>
-        </div>
+        )}
+        {!registrationFee && (
+          <div className="mt-5">
+            <div className="inline-block p-3 rounded-xl bg-[#140b06] border border-amber-950/70">
+              <span className="text-[10px] uppercase tracking-wider text-stone-500 font-bold block">Registration Fee</span>
+              <span className="text-sm font-bold text-orange-400">See registration portal</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* OFFICIAL RULEBOOK & GUIDELINES */}

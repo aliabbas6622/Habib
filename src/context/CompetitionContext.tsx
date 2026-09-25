@@ -72,11 +72,11 @@ const DEFAULT_SETTINGS: CompetitionSettings = {
   earlyBirdDiscountPercent: 0,
   droneWorkshopStandaloneStrict: true,
   pricings: {
-    'robowars': { moduleId: 'robowars', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 150,000 Cash Prize', prizeSecondPKR: 'PKR 75,000 Cash Prize', prizeThirdPKR: 'PKR 35,000 Cash Prize', isOpen: true },
-    'robo-soccer': { moduleId: 'robo-soccer', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 120,000 Cash Prize', prizeSecondPKR: 'PKR 60,000 Cash Prize', prizeThirdPKR: 'PKR 30,000 Cash Prize', isOpen: true },
-    'line-following-robot': { moduleId: 'line-following-robot', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 80,000 Cash Prize', prizeSecondPKR: 'PKR 40,000 Cash Prize', prizeThirdPKR: 'PKR 20,000 Cash Prize', isOpen: true },
-    'sumo-wars': { moduleId: 'sumo-wars', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 90,000 Cash Prize', prizeSecondPKR: 'PKR 45,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
-    'autonomous-navigation': { moduleId: 'autonomous-navigation', registrationFeePKR: 3000, prizeFirstPKR: 'PKR 100,000 Cash Prize', prizeSecondPKR: 'PKR 50,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
+    'robowars': { moduleId: 'robowars', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 150,000 Cash Prize', prizeSecondPKR: 'PKR 75,000 Cash Prize', prizeThirdPKR: 'PKR 35,000 Cash Prize', isOpen: true },
+    'robo-soccer': { moduleId: 'robo-soccer', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 120,000 Cash Prize', prizeSecondPKR: 'PKR 60,000 Cash Prize', prizeThirdPKR: 'PKR 30,000 Cash Prize', isOpen: true },
+    'line-following-robot': { moduleId: 'line-following-robot', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 80,000 Cash Prize', prizeSecondPKR: 'PKR 40,000 Cash Prize', prizeThirdPKR: 'PKR 20,000 Cash Prize', isOpen: true },
+    'sumo-wars': { moduleId: 'sumo-wars', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 90,000 Cash Prize', prizeSecondPKR: 'PKR 45,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
+    'autonomous-navigation': { moduleId: 'autonomous-navigation', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 100,000 Cash Prize', prizeSecondPKR: 'PKR 50,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
     'drone-workshop': { moduleId: 'drone-workshop', registrationFeePKR: 4000, prizeFirstPKR: 'PKR 70,000 Drone Kit & Trophy', prizeSecondPKR: 'PKR 35,000 High-Torque ESC Kit', prizeThirdPKR: 'Special FPV Goggles Kit', isOpen: true }
   },
   moduleCustomAssets: {},
@@ -439,10 +439,10 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
               });
             }
             
-            // Force module prices globally
+            // Force module prices globally (early bird rates)
             if (merged.pricings) {
               Object.keys(merged.pricings).forEach(key => {
-                merged.pricings[key].registrationFeePKR = key === 'drone-workshop' ? 4000 : 3000;
+                merged.pricings[key].registrationFeePKR = key === 'drone-workshop' ? 4000 : 3500;
               });
             }
 
