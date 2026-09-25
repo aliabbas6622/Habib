@@ -1,0 +1,17 @@
+{
+  "status": "success",
+  "result": {
+    "fileName": "firebase-js-config.json",
+    "fileContents": "{\n  \"projectId\": \"hurc2026-prod-db\",\n  \"appId\": \"1:1002527620901:web:4faa21ff22ec70ff0ce4cc\",\n  \"storageBucket\": \"hurc2026-prod-db.firebasestorage.app\",\n  \"apiKey\": \"AIzaSyBs1XXD1159mjIAeHBjOp8ZqJd5l8dpqUY\",\n  \"authDomain\": \"hurc2026-prod-db.firebaseapp.com\",\n  \"messagingSenderId\": \"1002527620901\",\n  \"projectNumber\": \"1002527620901\",\n  \"version\": \"2\"\n}",
+    "sdkConfig": {
+      "projectId": "hurc2026-prod-db",
+      "appId": "1:1002527620901:web:4faa21ff22ec70ff0ce4cc",
+      "storageBucket": "hurc2026-prod-db.firebasestorage.app",
+      "apiKey": "AIzaSyBs1XXD1159mjIAeHBjOp8ZqJd5l8dpqUY",
+      "authDomain": "hurc2026-prod-db.firebaseapp.com",
+      "messagingSenderId": "1002527620901",
+      "projectNumber": "1002527620901",
+      "version": "2"
+    }
+  }
+}

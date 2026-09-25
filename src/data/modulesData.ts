@@ -250,11 +250,11 @@ export const COMPETITION_MODULES: CompetitionModule[] = [
   {
     id: 'autonomous-nav',
     slug: 'autonomous-nav',
-    title: 'Autonomous Navigation & Obstacle Challenge',
-    shortTitle: 'Autonomous Nav',
+    title: 'Ground Zero',
+    shortTitle: 'Ground Zero',
     category: 'Exploration & AI',
     iconName: 'Cpu',
-    badge: 'Autonomous Nav',
+    badge: 'Ground Zero',
     image: autonomousNavImg,
     tagline: 'SLAM, Obstacle Avoidance, and Fire Hazard Extinguishing',
     description:
