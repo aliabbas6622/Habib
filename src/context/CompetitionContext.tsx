@@ -211,7 +211,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(saved);
         if (parsed.pricings) {
           Object.keys(parsed.pricings).forEach(key => {
-            parsed.pricings[key].registrationFeePKR = key === 'drone-workshop' ? 4000 : 3000;
+            parsed.pricings[key].registrationFeePKR = key === 'drone-workshop' ? 4000 : 3500;
           });
         }
         const merged = { ...DEFAULT_SETTINGS, ...parsed };

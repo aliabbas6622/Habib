@@ -768,9 +768,23 @@ export default function RegistrationPage({
                           {mod.title}
                         </span>
                         <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
-                          <span className={`text-xs font-bold whitespace-nowrap ${isClosed ? 'text-stone-600' : 'text-orange-400'}`}>
+                          {!isClosed && (
+                            <span className="flex items-center gap-1">
+                              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500" />
+                              </span>
+                              <span className="text-[9px] font-black uppercase tracking-wider text-orange-400">Early Bird</span>
+                            </span>
+                          )}
+                          <span className={`text-xs font-bold whitespace-nowrap ${isClosed ? 'text-stone-600' : 'text-white'}`}>
                             PKR {mod.registrationFeePKR.toLocaleString()}
                           </span>
+                          {!isClosed && (
+                            <span className="text-[10px] text-stone-500 line-through whitespace-nowrap">
+                              PKR {(mod.registrationFeePKR === 4000 ? 5000 : 4500).toLocaleString()}
+                            </span>
+                          )}
                           {mod.isStandalone && (
                             <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-800/50">
                               STANDALONE
