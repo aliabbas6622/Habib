@@ -6,7 +6,10 @@ import {
   CheckCircle2,
   AlertTriangle,
   Sparkles,
-  PlayCircle
+  PlayCircle,
+  Trophy,
+  Medal,
+  MapPin
 } from 'lucide-react';
 import { useCompetition } from '../context/CompetitionContext';
 import { getModuleIcon } from './Navbar';
@@ -273,6 +276,53 @@ export default function ModuleDetailView({
         )}
       </div>
 
+      {/* WINNING PRIZES — hidden for drone workshop */}
+      {currentModule.slug !== 'drone-workshop' && (
+        <div className="rounded-2xl bg-[#170e08] border border-amber-950/80 p-5 sm:p-7 mb-6 sm:mb-8 shadow-xl overflow-hidden relative">
+          {/* Background glow */}
+          <div className="absolute -top-10 -right-10 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Heading */}
+          <div className="flex items-center gap-2 mb-5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+            <h2 className="font-display text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
+              Winning Prizes
+            </h2>
+          </div>
+
+          <p className="text-stone-400 text-xs sm:text-sm mb-5 leading-relaxed">
+            Top-performing teams will be awarded exciting <span className="text-amber-400 font-semibold">cash prizes</span>. Compete, excel, and claim your reward!
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-md mx-auto w-full">
+            {/* Winner */}
+            <div className="relative rounded-2xl bg-gradient-to-br from-[#2a1800] via-[#1f1000] to-[#160b00] border border-amber-500/40 p-4 flex flex-col items-center text-center gap-2 shadow-[0_0_20px_rgba(251,191,36,0.12)] hover:shadow-[0_0_30px_rgba(251,191,36,0.22)] transition-all duration-300 group">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 to-transparent rounded-2xl pointer-events-none" />
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-[0_0_16px_rgba(251,191,36,0.5)] group-hover:scale-110 transition-transform duration-300">
+                <Trophy className="w-6 h-6 text-white drop-shadow" />
+              </div>
+              <span className="text-[10px] uppercase tracking-widest font-black text-amber-400">Winner</span>
+              <span className="text-[10px] text-amber-300/80 font-semibold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">💰 Cash Prize</span>
+            </div>
+
+            {/* Runner Up */}
+            <div className="relative rounded-2xl bg-gradient-to-br from-[#1a1a1a] via-[#111] to-[#0d0d0d] border border-stone-500/40 p-4 flex flex-col items-center text-center gap-2 shadow-[0_0_20px_rgba(156,163,175,0.08)] hover:shadow-[0_0_30px_rgba(156,163,175,0.18)] transition-all duration-300 group">
+              <div className="absolute inset-0 bg-gradient-to-br from-stone-400/5 to-transparent rounded-2xl pointer-events-none" />
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-stone-300 to-stone-500 flex items-center justify-center shadow-[0_0_16px_rgba(156,163,175,0.4)] group-hover:scale-110 transition-transform duration-300">
+                <Medal className="w-6 h-6 text-white drop-shadow" />
+              </div>
+              <span className="text-[10px] uppercase tracking-widest font-black text-stone-300">Runner Up</span>
+              <span className="text-[10px] text-stone-300/80 font-semibold bg-stone-500/10 px-2 py-0.5 rounded-full border border-stone-500/20">💰 Cash Prize</span>
+            </div>
+          </div>
+
+          <p className="mt-5 text-center text-[11px] text-stone-500 italic">
+            💰 Cash prize amounts will be announced at the event. Stay tuned!
+          </p>
+        </div>
+      )}
+
       {/* OFFICIAL RULEBOOK & GUIDELINES */}
       <div className="rounded-2xl bg-[#170e08] border border-amber-950/80 p-5 sm:p-7 mb-6 sm:mb-10 shadow-xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-amber-950/70 pb-4">
@@ -304,6 +354,36 @@ export default function ModuleDetailView({
           </div>
         </div>
 
+      </div>
+
+      {/* LOCATION SECTION */}
+      <div className="rounded-2xl bg-[#170e08] border border-amber-950/80 p-5 sm:p-7 mb-6 sm:mb-8 shadow-xl overflow-hidden relative">
+        <div className="absolute -top-10 -right-10 w-48 h-48 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex items-center gap-2 mb-4">
+          <span className="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+          <h2 className="font-display text-lg sm:text-xl font-bold uppercase tracking-wider text-white">Location</h2>
+        </div>
+        <div className="flex items-start gap-3.5 bg-gradient-to-br from-[#1f1008] to-[#140b04] border border-orange-500/20 rounded-2xl p-4 sm:p-5">
+          <div className="mt-0.5 shrink-0 w-9 h-9 rounded-xl bg-orange-600/20 border border-orange-500/30 flex items-center justify-center">
+            <MapPin className="w-5 h-5 text-orange-400" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-white font-bold text-sm sm:text-base mb-0.5">Habib University</p>
+            <p className="text-stone-400 text-xs sm:text-sm leading-relaxed">
+              Block 18, University Avenue, Gulistan-e-Jauhar,<br />
+              off Shahrah-e-Faisal, Karachi, Sindh, Pakistan — 75290
+            </p>
+            <a
+              href="https://maps.google.com/?q=Habib+University,+Karachi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-3 text-[11px] font-semibold text-orange-400 hover:text-orange-300 transition-colors"
+            >
+              <MapPin className="w-3 h-3" />
+              View on Google Maps ↗
+            </a>
+          </div>
+        </div>
       </div>
 
       {/* REGISTER YOUR TEAM TODAY BOTTOM CTA */}

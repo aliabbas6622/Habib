@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import ModulesGrid from './components/ModulesGrid';
 import BottomCtaSection from './components/BottomCtaSection';
+import LocationSection from './components/LocationSection';
 import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 
@@ -107,6 +108,7 @@ export default function App() {
               <HeroSection onRegisterClick={() => navigateToRegister()} />
               <ModulesGrid onSelectModule={navigateToModule} />
               <BottomCtaSection onRegisterClick={() => navigateToRegister()} />
+              <LocationSection />
             </div>
           )}
 
