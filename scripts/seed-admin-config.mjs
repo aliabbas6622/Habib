@@ -9,7 +9,7 @@ const app = initializeApp(config);
 const db = getFirestore(app, config.firestoreDatabaseId);
 
 const UPDATES = {
-  countdownTargetDate: '2026-12-28T09:00:00'
+  countdownTargetDate: '2027-01-04T09:00:00'
 };
 
 try {

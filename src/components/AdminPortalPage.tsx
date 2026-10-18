@@ -726,13 +726,13 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                         </label>
                       </div>
 
-                      {/* Only open/close — price is fixed to 3000 */}
+                      {/* Only open/close — fee is early bird fixed */}
                       <div className="text-xs">
                         <div className="block text-stone-400 font-semibold mb-1">
-                          Fee per Team (PKR)
+                          {mod.id === 'drone-workshop' ? 'Fee per Person (PKR)' : 'Fee per Team (PKR)'}
                         </div>
                         <div className="w-full px-3 py-2 rounded-xl bg-[#120804]/50 border border-amber-950/50 text-stone-400 font-bold">
-                          3000 (Fixed)
+                          {currentPricing.registrationFeePKR || (mod.id === 'drone-workshop' ? 4000 : 3500)} (Early Bird)
                         </div>
                       </div>
                     </div>

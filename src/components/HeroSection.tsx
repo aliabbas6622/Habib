@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Flame, ArrowRight } from 'lucide-react';
+import { Flame, ArrowRight, Calendar } from 'lucide-react';
 import { useCompetition } from '../context/CompetitionContext';
 
 interface HeroSectionProps {
@@ -9,8 +9,8 @@ interface HeroSectionProps {
 export default function HeroSection({ onRegisterClick }: HeroSectionProps) {
   const { settings, logoUrl } = useCompetition();
 
-  // Fixed countdown locked to 28th December
-  const targetDate = new Date('2026-12-28T09:00:00').getTime();
+  // Fixed countdown locked to 4th January 2027
+  const targetDate = new Date('2027-01-04T09:00:00').getTime();
 
   const calculateTimeLeft = () => {
     const now = new Date().getTime();
@@ -79,14 +79,28 @@ export default function HeroSection({ onRegisterClick }: HeroSectionProps) {
           HABIB UNIVERSITY ROBOTICS COMPETITION
         </h2>
 
+        {/* Competition Dates Badge */}
+        <div className="mt-4 inline-flex items-center gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#1b0f09]/90 border border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.25)] backdrop-blur-md">
+          <Calendar className="w-4 h-4 text-orange-400 shrink-0" />
+          <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-stone-200">
+            Competition Dates: <strong className="text-orange-400 font-black">4th &amp; 5th January 2026</strong>
+          </span>
+        </div>
+
         {/* Event Countdown Card */}
         <div
           id="event-countdown-card"
-          className="mt-8 sm:mt-10 w-full max-w-2xl rounded-2xl bg-[#1c100a]/90 border border-orange-500/30 p-4 sm:p-7 shadow-[0_0_35px_rgba(249,115,22,0.15)] backdrop-blur-md"
+          className="mt-7 sm:mt-9 w-full max-w-2xl rounded-2xl bg-[#1c100a]/90 border border-orange-500/30 p-4 sm:p-7 shadow-[0_0_35px_rgba(249,115,22,0.15)] backdrop-blur-md"
         >
-          <div className="flex items-center justify-center gap-2 text-orange-400 text-xs sm:text-sm font-bold tracking-widest uppercase mb-4 sm:mb-5">
-            <Flame className="w-4 h-4 text-orange-500 fill-orange-500/30 animate-pulse" />
-            <span>EVENT COUNTDOWN</span>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 border-b border-amber-950/70 pb-3 mb-4 sm:mb-5">
+            <div className="flex items-center gap-2 text-orange-400 text-xs sm:text-sm font-bold tracking-widest uppercase">
+              <Flame className="w-4 h-4 text-orange-500 fill-orange-500/30 animate-pulse" />
+              <span>EVENT COUNTDOWN</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-300">
+              <Calendar className="w-3.5 h-3.5 text-orange-400" />
+              <span>Event Dates: <strong className="text-orange-300">4th &amp; 5th January 2026</strong></span>
+            </div>
           </div>
 
           {/* Segmented Countdown Grid: 2x2 on phones so the labels always fit,

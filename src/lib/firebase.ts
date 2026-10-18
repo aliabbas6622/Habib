@@ -30,8 +30,9 @@ const app = !getApps().length ? initializeApp(firebaseConfigJson) : getApp();
 export const auth = getAuth(app);
 
 // Initialize Firestore with specific Database ID if provided in config
-export const db = firebaseConfigJson.firestoreDatabaseId 
-  ? getFirestore(app, firebaseConfigJson.firestoreDatabaseId)
+const customDbId = (firebaseConfigJson as { firestoreDatabaseId?: string }).firestoreDatabaseId;
+export const db = customDbId 
+  ? getFirestore(app, customDbId)
   : getFirestore(app);
 
 // Test Firestore connection on boot as instructed in firebase-skill

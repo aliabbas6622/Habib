@@ -13,6 +13,34 @@ import { COMPETITION_MODULES, HURC_LOGO } from '../data/modulesData';
 import { CompetitionModule, TeamRegistrationData, AmbassadorRegistrationData, StudentBodyMember } from '../types';
 import { sendRegistrationConfirmationEmail, DispatchedEmail, getDispatchedEmails } from '../lib/emailService';
 
+import director1 from '../assets/images/student-body/director-1.jpg';
+import director2 from '../assets/images/student-body/director-2.jpg';
+import director3 from '../assets/images/student-body/director-3.jpg';
+import director4 from '../assets/images/student-body/director-4.jpg';
+import director5 from '../assets/images/student-body/director-5.jpg';
+import director6 from '../assets/images/student-body/director-6.jpg';
+import director7 from '../assets/images/student-body/director-7.jpg';
+import director8 from '../assets/images/student-body/director-8.jpg';
+import director9 from '../assets/images/student-body/director-9.jpg';
+import director10 from '../assets/images/student-body/director-10.jpg';
+import director11 from '../assets/images/student-body/director-11.jpg';
+import director12 from '../assets/images/student-body/director-12.jpg';
+
+const DEFAULT_DIRECTOR_IMAGES: Record<string, string> = {
+  '1': director1,
+  '2': director2,
+  '3': director3,
+  '4': director4,
+  '5': director5,
+  '6': director6,
+  '7': director7,
+  '8': director8,
+  '9': director9,
+  '10': director10,
+  '11': director11,
+  '12': director12
+};
+
 export interface ModulePricing {
   moduleId: string;
   registrationFeePKR: number;
@@ -64,7 +92,7 @@ export const DEFAULT_ADMIN_SECRET_TOKEN = 'hurc2026_super_admin';
 
 const DEFAULT_SETTINGS: CompetitionSettings = {
   announcementText: 'HURC 2026 • Habib University Robotics Competition',
-  countdownTargetDate: '2026-12-28T09:00:00',
+  countdownTargetDate: '2027-01-04T09:00:00',
   adminSecretToken: DEFAULT_ADMIN_SECRET_TOKEN,
   adminLoginId: DEFAULT_ADMIN_LOGIN_ID,
   portalCustomUrl: 'admin-portal-hurc-secure-auth',
@@ -81,18 +109,18 @@ const DEFAULT_SETTINGS: CompetitionSettings = {
   },
   moduleCustomAssets: {},
   studentBody: [
-    { id: '1', role: 'President', name: '' },
-    { id: '2', role: 'Vice President', name: '' },
-    { id: '3', role: 'Director Registration and Finance', name: '' },
-    { id: '4', role: 'Director Marketing and Design', name: '' },
-    { id: '5', role: 'Director Logistics', name: '' },
-    { id: '6', role: 'Director Robo Wars', name: '' },
-    { id: '7', role: 'Director Robo Soccer', name: '' },
-    { id: '8', role: 'Director Ready To Race', name: '' },
-    { id: '9', role: 'Director Drone Workshop', name: '' },
-    { id: '10', role: 'Director Indigenous Module', name: '' },
-    { id: '11', role: 'Director Sumo Wars', name: '' },
-    { id: '12', role: 'Director Sponsorship', name: '' },
+    { id: '1', role: 'President', name: 'Burair Inayatullah', imageUrl: director1 },
+    { id: '2', role: 'Vice President', name: 'Haider Zaidi', imageUrl: director2 },
+    { id: '3', role: 'Director Registration and Finance', name: 'Sualeh Abbas Rizvi', imageUrl: director3 },
+    { id: '4', role: 'Director Marketing and Design', name: 'Amna Muhammad', imageUrl: director4 },
+    { id: '5', role: 'Director Logistics', name: 'Abdul Haseeb Khan', imageUrl: director5 },
+    { id: '6', role: 'Director Robo Wars', name: 'Ali Hussain Zaidi', imageUrl: director6 },
+    { id: '7', role: 'Director Robo Soccer', name: 'Zainab Khan', imageUrl: director7 },
+    { id: '8', role: 'Director Ready To Race', name: 'Sidra Bilal', imageUrl: director8 },
+    { id: '9', role: 'Director Drone Workshop', name: 'Abdullah Naeem', imageUrl: director9 },
+    { id: '10', role: 'Director Indigenous Module', name: 'Shaheer Baig', imageUrl: director10 },
+    { id: '11', role: 'Director Sumo Wars', name: 'Ruqaiya Ali Akbar', imageUrl: director11 },
+    { id: '12', role: 'Director Sponsorship', name: 'Maryam Fareed', imageUrl: director12 },
   ]
 };
 
@@ -215,6 +243,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
           });
         }
         const merged = { ...DEFAULT_SETTINGS, ...parsed };
+        merged.countdownTargetDate = '2027-01-04T09:00:00';
         if (parsed.studentBody) {
           merged.studentBody = DEFAULT_SETTINGS.studentBody.map(defaultMember => {
             const parsedMember = parsed.studentBody.find((m: any) => m.id === defaultMember.id);
@@ -445,6 +474,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
                 merged.pricings[key].registrationFeePKR = key === 'drone-workshop' ? 4000 : 3500;
               });
             }
+            merged.countdownTargetDate = '2027-01-04T09:00:00';
 
             settingsRef.current = merged;
             setSettings(merged);
@@ -768,7 +798,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
 
   const dynamicStudentBody = settings.studentBody.map(member => ({
     ...member,
-    imageUrl: assetBlobs[ASSET_KEYS.studentBody(member.id)] || member.imageUrl
+    imageUrl: assetBlobs[ASSET_KEYS.studentBody(member.id)] || member.imageUrl || DEFAULT_DIRECTOR_IMAGES[member.id]
   }));
 
   return (

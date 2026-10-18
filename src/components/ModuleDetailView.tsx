@@ -259,7 +259,9 @@ export default function ModuleDetailView({
                   PKR {(registrationFee === 4000 ? 5000 : 4500).toLocaleString()}
                 </span>
               </div>
-              <span className="text-[10px] text-stone-400">per team · limited time offer</span>
+              <span className="text-[10px] text-stone-400">
+                {currentModule.slug === 'drone-workshop' ? 'per person' : 'per team'} · limited time offer
+              </span>
               <p className="text-[10px] text-amber-400/80 font-semibold mt-1">
                 ⚡ Register now to lock in this price — it won't last!
               </p>

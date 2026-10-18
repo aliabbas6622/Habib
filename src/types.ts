@@ -71,7 +71,7 @@ export interface TeamRegistrationData {
   members: TeamMember[];
   declarationAccepted: boolean;
   ambassadorCode?: string;
-  status: 'Pending Review' | 'Verified' | 'Approved' | 'Rejected';
+  status: 'Pending Review' | 'Verified' | 'Approved' | 'Rejected' | 'Deleted';
 }
 
 export interface AmbassadorRegistrationData {
@@ -93,5 +93,5 @@ export interface AmbassadorRegistrationData {
   motivation: string;
   pastExperience: string;
   declarationAccepted: boolean;
-  status: 'Pending Review' | 'Shortlisted' | 'Selected';
+  status: 'Pending Review' | 'Shortlisted' | 'Selected' | 'Rejected' | 'Deleted';
 }
