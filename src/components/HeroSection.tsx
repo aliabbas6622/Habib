@@ -83,7 +83,7 @@ export default function HeroSection({ onRegisterClick }: HeroSectionProps) {
         <div className="mt-4 inline-flex items-center gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#1b0f09]/90 border border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.25)] backdrop-blur-md">
           <Calendar className="w-4 h-4 text-orange-400 shrink-0" />
           <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-stone-200">
-            Competition Dates: <strong className="text-orange-400 font-black">4th &amp; 5th January 2026</strong>
+            Competition Dates: <strong className="text-orange-400 font-black">4th &amp; 5th January 2027</strong>
           </span>
         </div>
 
@@ -99,7 +99,7 @@ export default function HeroSection({ onRegisterClick }: HeroSectionProps) {
             </div>
             <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-300">
               <Calendar className="w-3.5 h-3.5 text-orange-400" />
-              <span>Event Dates: <strong className="text-orange-300">4th &amp; 5th January 2026</strong></span>
+              <span>Event Dates: <strong className="text-orange-300">4th &amp; 5th January 2027</strong></span>
             </div>
           </div>
 
