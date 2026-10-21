@@ -199,14 +199,14 @@ export const COMPETITION_MODULES: CompetitionModule[] = [
     image: sumoWarsImg,
     tagline: 'High-Torque Push, Optical Edge Detection, and Ring Supremacy',
     description:
-      'Inspired by traditional Japanese sumo, Sumo Wars pits two autonomous robots against each other inside a circular elevated ring (Dohyo). Robots rely on optical line sensors to detect the ring bounds and ultrasonic or LiDAR sensors to hunt and eject the opponent.',
+      'Inspired by traditional Japanese sumo, Sumo Wars pits two human-controlled robots against each other inside a circular elevated ring (Dohyo). Operators pilot their robots using wireless transmitters or remote signal devices, competing to detect the ring bounds and eject the opponent from the ring.',
     specs: {
       teamSize: '2 - 4 Members',
       robotWeight: 'Strictly 3.0 kg max (Standard Class)',
       dimensions: '20cm × 20cm initial footprint (Unlimited after match start)',
       arenaSize: '154 cm diameter circular elevated steel/timber Dohyo ring',
       powerLimit: 'Max 24V DC battery system',
-      controlType: '100% Autonomous, started via 5-second mandatory delay'
+      controlType: 'Remote Controlled via Wireless Transmitter / Signal Device'
     },
     rulebook: {
       overview: [
