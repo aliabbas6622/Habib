@@ -72,7 +72,7 @@ export interface CompetitionSettings {
   adminLoginId: string;
   portalCustomUrl: string;
   contactEmail: string;
-  earlyBirdDiscountPercent: number;
+
   droneWorkshopStandaloneStrict: boolean;
   /** External brand logo URL. Uploaded logos live in the `assets` collection. */
   logoUrl?: string | null;
@@ -97,7 +97,7 @@ const DEFAULT_SETTINGS: CompetitionSettings = {
   adminLoginId: DEFAULT_ADMIN_LOGIN_ID,
   portalCustomUrl: 'admin-portal-hurc-secure-auth',
   contactEmail: 'hurc3426@gmail.com',
-  earlyBirdDiscountPercent: 0,
+
   droneWorkshopStandaloneStrict: true,
   pricings: {
     'robowars': { moduleId: 'robowars', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 150,000 Cash Prize', prizeSecondPKR: 'PKR 75,000 Cash Prize', prizeThirdPKR: 'PKR 35,000 Cash Prize', isOpen: true },
@@ -237,11 +237,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       const saved = localStorage.getItem('hurc_settings');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.pricings) {
-          Object.keys(parsed.pricings).forEach(key => {
-            parsed.pricings[key].registrationFeePKR = key === 'drone-workshop' ? 4000 : 3500;
-          });
-        }
+
         const merged = { ...DEFAULT_SETTINGS, ...parsed };
         merged.countdownTargetDate = '2027-01-04T09:00:00';
         if (parsed.studentBody) {
@@ -422,6 +418,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       unsubAssets = onSnapshot(
         collection(db, 'settings'),
         (snapshot) => {
+          // Build the full set of asset keys present in Firestore right now
           const remote: Record<string, string> = {};
           snapshot.forEach(docSnap => {
             if (docSnap.id.startsWith(ASSET_DOC_PREFIX)) {
@@ -432,16 +429,24 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
               }
             }
           });
-          
-          if (Object.keys(remote).length > 0) {
-            setAssetBlobs(prev => {
-              const next = { ...prev, ...remote };
-              try {
-                localStorage.setItem(ASSET_LOCAL_CACHE, JSON.stringify(next));
-              } catch {}
-              return next;
+
+          // Always update — merge in present assets AND remove keys that no
+          // longer exist in Firestore (e.g. a deleted rulebook). This prevents
+          // other browsers from serving a stale cached asset.
+          setAssetBlobs(prev => {
+            const next: Record<string, string> = {};
+            // Keep every local asset that is NOT a known Firestore-managed key
+            // (uploaded banners, rulebooks, logos, student body photos).
+            Object.entries(prev).forEach(([k, v]) => {
+              if (!ASSET_KEY_LIST.includes(k)) next[k] = v;
             });
-          }
+            // Overlay whatever Firestore says is current
+            Object.assign(next, remote);
+            try {
+              localStorage.setItem(ASSET_LOCAL_CACHE, JSON.stringify(next));
+            } catch {}
+            return next;
+          });
         },
         (error) => {
           console.warn('Realtime assets listener inactive:', error);
@@ -468,12 +473,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
               });
             }
             
-            // Force module prices globally (early bird rates)
-            if (merged.pricings) {
-              Object.keys(merged.pricings).forEach(key => {
-                merged.pricings[key].registrationFeePKR = key === 'drone-workshop' ? 4000 : 3500;
-              });
-            }
+
             merged.countdownTargetDate = '2027-01-04T09:00:00';
 
             settingsRef.current = merged;

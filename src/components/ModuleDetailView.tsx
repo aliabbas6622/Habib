@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   Sparkles,
-  PlayCircle,
   Trophy,
   Medal,
   MapPin
@@ -133,10 +132,19 @@ export default function ModuleDetailView({
     window.open(rulebookUrl, '_blank', 'noopener,noreferrer');
   };
 
-  /** Downloads the rulebook file. Falls back to print for generated guidelines. */
+  /** Downloads the rulebook file. Falls back to print/Save-as-PDF dialog for generated guidelines. */
   const downloadRulebook = () => {
     if (!rulebookUrl) {
+      // No PDF uploaded — open generated guidelines then auto-trigger the print/Save-as-PDF dialog
       openGeneratedGuidelines();
+      // We can't call print() on a cross-origin window, but openGeneratedGuidelines()
+      // writes to a same-origin blank window — so we open a second one with auto-print.
+      const list = (items: string[]) => items.map(item => `<li>${escapeHtml(item)}</li>`).join('');
+      const pw = window.open('', '_blank');
+      if (!pw) return;
+      pw.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(currentModule.title)} - HURC 2026 Rulebook</title><style>body{font-family:'Segoe UI',Arial,sans-serif;padding:32px;color:#111;line-height:1.6;max-width:900px;margin:0 auto}.header{border-bottom:3px solid #ea580c;padding-bottom:20px;margin-bottom:30px;text-align:center}h1{color:#9a3412;font-size:26px;text-transform:uppercase;margin:0}.subtitle{color:#666;font-size:14px;margin-top:6px}.section{margin-bottom:25px}h2{font-size:18px;color:#c2410c;border-bottom:1px solid #e5e7eb;padding-bottom:6px}ul{padding-left:20px}li{margin-bottom:8px}.footer{margin-top:50px;text-align:center;font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:15px}@media print{body{padding:0}}</style></head><body><div class="header"><h1>HURC 2026 - HABIB UNIVERSITY ROBOTICS COMPETITION</h1><div class="subtitle">Official Rulebook &amp; Guidelines &bull; ${escapeHtml(currentModule.title)}</div></div><div class="section"><h2>1. Challenge Overview</h2><p>${escapeHtml(currentModule.description)}</p><ul>${list(currentModule.rulebook.overview)}</ul></div><div class="section"><h2>2. Arena Dimensions &amp; Footprint</h2><ul>${list(currentModule.rulebook.arenaDetails)}</ul></div><div class="section"><h2>3. Hardware &amp; Safety Specifications</h2><ul>${list(currentModule.rulebook.robotConstraints)}</ul></div><div class="section"><h2>4. Match Format &amp; Scoring</h2><ul>${list(currentModule.rulebook.matchFormat)}</ul><ul>${list(currentModule.rulebook.scoringSystem)}</ul></div><div class="section"><h2>5. Penalties &amp; Disqualifications</h2><ul>${list(currentModule.rulebook.penaltiesAndDisqualifications)}</ul></div><div class="footer">Habib University, Karachi &bull; Verified Technical Committee Document &bull; Session 2026</div><script>window.onload=function(){window.print();}<\/script></body></html>`);
+      pw.document.close();
+      pw.focus();
       return;
     }
     const link = document.createElement('a');
@@ -238,33 +246,25 @@ export default function ModuleDetailView({
           {currentModule.tagline}
         </p>
 
-        {/* Early Bird Registration Fee */}
+        {/* Registration Fee */}
         {registrationFee && (
           <div className="mt-5">
             <div className="inline-flex flex-col gap-1.5 p-4 rounded-2xl bg-gradient-to-br from-[#1f0f06] to-[#140b04] border border-orange-500/40 shadow-[0_0_20px_rgba(249,115,22,0.15)] relative overflow-hidden">
               {/* Glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-amber-500/5 pointer-events-none" />
-              {/* Early Bird Badge */}
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500" />
                 </span>
-                <span className="text-[10px] uppercase tracking-widest font-black text-orange-400">🎯 Early Bird Price</span>
+                <span className="text-[10px] uppercase tracking-widest font-black text-orange-400">Registration Fee</span>
               </div>
-              {/* Prices */}
               <div className="flex items-baseline gap-3 mt-0.5">
                 <span className="text-xl font-black text-white">PKR {registrationFee.toLocaleString()}</span>
-                <span className="text-xs text-stone-500 line-through">
-                  PKR {(registrationFee === 4000 ? 5000 : 4500).toLocaleString()}
-                </span>
               </div>
               <span className="text-[10px] text-stone-400">
-                {currentModule.slug === 'drone-workshop' ? 'per person' : 'per team'} · limited time offer
+                {currentModule.slug === 'drone-workshop' ? 'per person' : 'per team'}
               </span>
-              <p className="text-[10px] text-amber-400/80 font-semibold mt-1">
-                ⚡ Register now to lock in this price — it won't last!
-              </p>
             </div>
           </div>
         )}
@@ -341,8 +341,8 @@ export default function ModuleDetailView({
               onClick={openRulebook}
               className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-[#24130b] hover:bg-[#301a0f] border border-amber-900/60 text-xs font-semibold text-stone-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
-              {rulebookUrl ? <ExternalLink className="w-3.5 h-3.5 text-orange-400" /> : <PlayCircle className="w-3.5 h-3.5 text-orange-400" />}
-              <span>{rulebookUrl ? 'Open Rulebook' : 'View Guidelines'}</span>
+              {rulebookUrl ? <ExternalLink className="w-3.5 h-3.5 text-orange-400" /> : <FileText className="w-3.5 h-3.5 text-orange-400" />}
+              <span>View Rulebook</span>
             </button>
 
             {/* Download */}
@@ -351,7 +351,7 @@ export default function ModuleDetailView({
               className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_0_12px_rgba(249,115,22,0.4)] cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>{rulebookUrl ? 'Download' : 'Print Guidelines'}</span>
+              <span>Download Rulebook</span>
             </button>
           </div>
         </div>
