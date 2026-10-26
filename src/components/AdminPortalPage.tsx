@@ -27,6 +27,7 @@ import {
 import {
   useCompetition,
   CompetitionSettings,
+  ModulePricing,
   DEFAULT_ADMIN_LOGIN_ID,
   MAX_ASSET_UPLOAD_KB,
   isOversizedUpload,
@@ -270,9 +271,37 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
   };
 
   const handleSaveAllPricings = async () => {
-    await updateSettings({ pricings: localPricings });
+    const mergedPricings: Record<string, ModulePricing> = { ...localPricings };
+    modules.forEach(mod => {
+      const existing = mergedPricings[mod.id] || settings.pricings[mod.id];
+      mergedPricings[mod.id] = {
+        moduleId: mod.id,
+        registrationFeePKR: existing?.registrationFeePKR !== undefined ? existing.registrationFeePKR : (mod.id === 'drone-workshop' ? 5000 : 4500),
+        prizeFirstPKR: existing?.prizeFirstPKR || 'PKR 100,000 Cash',
+        prizeSecondPKR: existing?.prizeSecondPKR || 'PKR 50,000 Cash',
+        prizeThirdPKR: existing?.prizeThirdPKR || 'PKR 25,000 Cash',
+        isOpen: existing?.isOpen ?? true
+      };
+    });
+    await updateSettings({ pricings: mergedPricings });
     setSaveSuccessMessage('Module registration fees and open/close statuses updated successfully in Firestore!');
-    setTimeout(() => setSaveSuccessMessage(null), 3000);
+    setTimeout(() => setSaveSuccessMessage(null), 3500);
+  };
+
+  const handleSaveSinglePricing = async (moduleId: string) => {
+    const existing = localPricings[moduleId] || settings.pricings[moduleId];
+    const pricing: ModulePricing = {
+      moduleId,
+      registrationFeePKR: existing?.registrationFeePKR !== undefined ? existing.registrationFeePKR : (moduleId === 'drone-workshop' ? 5000 : 4500),
+      prizeFirstPKR: existing?.prizeFirstPKR || 'PKR 100,000 Cash',
+      prizeSecondPKR: existing?.prizeSecondPKR || 'PKR 50,000 Cash',
+      prizeThirdPKR: existing?.prizeThirdPKR || 'PKR 25,000 Cash',
+      isOpen: existing?.isOpen ?? true
+    };
+    await updateModulePricing(moduleId, pricing);
+    const modTitle = modules.find(m => m.id === moduleId)?.title || moduleId;
+    setSaveSuccessMessage(`Fee and status saved for ${modTitle} (PKR ${pricing.registrationFeePKR.toLocaleString()})!`);
+    setTimeout(() => setSaveSuccessMessage(null), 3500);
   };
 
   const handleSaveGeneralSettings = async () => {
@@ -685,7 +714,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                 {modules.map((mod) => {
                   const currentPricing = localPricings[mod.id] || {
                     moduleId: mod.id,
-                    registrationFeePKR: 3000,
+                    registrationFeePKR: mod.id === 'drone-workshop' ? 5000 : 4500,
                     prizeFirstPKR: 'PKR 100,000 Cash',
                     prizeSecondPKR: 'PKR 50,000 Cash',
                     prizeThirdPKR: 'PKR 25,000 Cash',
@@ -726,18 +755,69 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                         </label>
                       </div>
 
-                      {/* Registration Fee */}
-                      <div className="text-xs">
-                        <div className="block text-stone-400 font-semibold mb-1">
-                          {mod.id === 'drone-workshop' ? 'Fee per Person (PKR)' : 'Fee per Team (PKR)'}
+                      {/* Registration Fee - Fully Editable & Dynamic */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <label className="text-stone-300 font-semibold flex items-center gap-1.5">
+                            <DollarSign className="w-3.5 h-3.5 text-orange-400" />
+                            <span>{mod.id === 'drone-workshop' ? 'Fee per Person (PKR)' : 'Fee per Team (PKR)'}</span>
+                          </label>
+                          <span className="text-[11px] font-mono font-bold text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-800/40">
+                            PKR {(currentPricing.registrationFeePKR !== undefined ? currentPricing.registrationFeePKR : (mod.id === 'drone-workshop' ? 5000 : 4500)).toLocaleString()}
+                          </span>
                         </div>
-                        <div className="w-full px-3 py-2 rounded-xl bg-[#120804]/50 border border-amber-950/50 text-stone-400 font-bold">
-                          {currentPricing.registrationFeePKR || (mod.id === 'drone-workshop' ? 4000 : 3500)}
+
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 font-bold text-xs pointer-events-none select-none">
+                              PKR
+                            </span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="100"
+                              value={currentPricing.registrationFeePKR !== undefined ? currentPricing.registrationFeePKR : (mod.id === 'drone-workshop' ? 5000 : 4500)}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+                                const val = raw === '' ? 0 : parseInt(raw, 10);
+                                setLocalPricings(prev => ({
+                                  ...prev,
+                                  [mod.id]: {
+                                    ...currentPricing,
+                                    registrationFeePKR: isNaN(val) ? 0 : Math.max(0, val)
+                                  }
+                                }));
+                              }}
+                              className="w-full pl-12 pr-3 py-2 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 text-white font-bold text-sm focus:outline-none focus:ring-1 focus:ring-orange-500/50 transition-all placeholder-stone-600"
+                              placeholder="e.g. 4500"
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSaveSinglePricing(mod.id)}
+                            className="px-3.5 py-2 rounded-xl bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 border border-orange-500/40 hover:border-orange-500 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                            title="Save fee for this module"
+                          >
+                            <Save className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Save</span>
+                          </button>
                         </div>
                       </div>
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Bottom Save All Bar */}
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleSaveAllPricings}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(249,115,22,0.4)] cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save All Price Changes</span>
+                </button>
               </div>
             </div>
           )}

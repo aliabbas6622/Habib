@@ -100,12 +100,12 @@ const DEFAULT_SETTINGS: CompetitionSettings = {
 
   droneWorkshopStandaloneStrict: true,
   pricings: {
-    'robowars': { moduleId: 'robowars', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 150,000 Cash Prize', prizeSecondPKR: 'PKR 75,000 Cash Prize', prizeThirdPKR: 'PKR 35,000 Cash Prize', isOpen: true },
-    'robo-soccer': { moduleId: 'robo-soccer', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 120,000 Cash Prize', prizeSecondPKR: 'PKR 60,000 Cash Prize', prizeThirdPKR: 'PKR 30,000 Cash Prize', isOpen: true },
-    'line-following-robot': { moduleId: 'line-following-robot', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 80,000 Cash Prize', prizeSecondPKR: 'PKR 40,000 Cash Prize', prizeThirdPKR: 'PKR 20,000 Cash Prize', isOpen: true },
-    'sumo-wars': { moduleId: 'sumo-wars', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 90,000 Cash Prize', prizeSecondPKR: 'PKR 45,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
-    'autonomous-navigation': { moduleId: 'autonomous-navigation', registrationFeePKR: 3500, prizeFirstPKR: 'PKR 100,000 Cash Prize', prizeSecondPKR: 'PKR 50,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
-    'drone-workshop': { moduleId: 'drone-workshop', registrationFeePKR: 4000, prizeFirstPKR: 'PKR 70,000 Drone Kit & Trophy', prizeSecondPKR: 'PKR 35,000 High-Torque ESC Kit', prizeThirdPKR: 'Special FPV Goggles Kit', isOpen: true }
+    'robowars': { moduleId: 'robowars', registrationFeePKR: 4500, prizeFirstPKR: 'PKR 150,000 Cash Prize', prizeSecondPKR: 'PKR 75,000 Cash Prize', prizeThirdPKR: 'PKR 35,000 Cash Prize', isOpen: true },
+    'robo-soccer': { moduleId: 'robo-soccer', registrationFeePKR: 4500, prizeFirstPKR: 'PKR 120,000 Cash Prize', prizeSecondPKR: 'PKR 60,000 Cash Prize', prizeThirdPKR: 'PKR 30,000 Cash Prize', isOpen: true },
+    'line-following-robot': { moduleId: 'line-following-robot', registrationFeePKR: 4500, prizeFirstPKR: 'PKR 80,000 Cash Prize', prizeSecondPKR: 'PKR 40,000 Cash Prize', prizeThirdPKR: 'PKR 20,000 Cash Prize', isOpen: true },
+    'sumo-wars': { moduleId: 'sumo-wars', registrationFeePKR: 4500, prizeFirstPKR: 'PKR 90,000 Cash Prize', prizeSecondPKR: 'PKR 45,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
+    'autonomous-navigation': { moduleId: 'autonomous-navigation', registrationFeePKR: 4500, prizeFirstPKR: 'PKR 100,000 Cash Prize', prizeSecondPKR: 'PKR 50,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
+    'drone-workshop': { moduleId: 'drone-workshop', registrationFeePKR: 5000, prizeFirstPKR: 'PKR 70,000 Drone Kit & Trophy', prizeSecondPKR: 'PKR 35,000 High-Torque ESC Kit', prizeThirdPKR: 'Special FPV Goggles Kit', isOpen: true }
   },
   moduleCustomAssets: {},
   studentBody: [
@@ -438,7 +438,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
             // Keep every local asset that is NOT a known Firestore-managed key
             // (uploaded banners, rulebooks, logos, student body photos).
             Object.entries(prev).forEach(([k, v]) => {
-              if (!ASSET_KEY_LIST.includes(k)) next[k] = v;
+              if (!ASSET_KEY_LIST.includes(k)) next[k] = v as string;
             });
             // Overlay whatever Firestore says is current
             Object.assign(next, remote);
@@ -552,7 +552,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
   const updateModulePricing = async (moduleId: string, pricing: Partial<ModulePricing>) => {
     const existing = settingsRef.current.pricings[moduleId] || {
       moduleId,
-      registrationFeePKR: 3000,
+      registrationFeePKR: 4500,
       prizeFirstPKR: 'PKR 100,000 Cash',
       prizeSecondPKR: 'PKR 50,000 Cash',
       prizeThirdPKR: 'PKR 25,000 Cash',
@@ -641,7 +641,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       const team = data as TeamRegistrationData;
       team.selectedModules.forEach(modId => {
         const p = settingsRef.current.pricings[modId];
-        calculatedFee += p ? p.registrationFeePKR : 3000;
+        calculatedFee += p ? p.registrationFeePKR : 4500;
       });
     }
 
@@ -718,7 +718,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
     let fee = 3000;
     if (target.type === 'team') {
       const team = target as TeamRegistrationData;
-      fee = team.selectedModules.reduce((acc, m) => acc + (settingsRef.current.pricings[m]?.registrationFeePKR || 3000), 0);
+      fee = team.selectedModules.reduce((acc, m) => acc + (settingsRef.current.pricings[m]?.registrationFeePKR || 4500), 0);
     }
     const sent = await sendRegistrationConfirmationEmail(target, fee);
     setSentEmails(prev => [sent, ...prev]);
@@ -781,7 +781,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       ...m,
       image: bannerBlob || customAsset.customBannerUrl || m.image,
       isOpen: customPrice ? customPrice.isOpen : true,
-      registrationFeePKR: customPrice ? customPrice.registrationFeePKR : 3000,
+      registrationFeePKR: customPrice ? customPrice.registrationFeePKR : 4500,
       prizePool: {
         ...m.prizePool,
         firstPlace: customPrice?.prizeFirstPKR || m.prizePool.firstPlace,
