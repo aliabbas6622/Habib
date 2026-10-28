@@ -15,7 +15,7 @@ export default function LocationSection() {
           Find Us Here
         </h2>
         <p className="mt-3 text-stone-400 text-sm sm:text-base max-w-xl">
-          HURC 2026 takes place at the iconic Habib University campus in the heart of Karachi.
+          HURC 2027 takes place at the iconic Habib University campus in the heart of Karachi.
         </p>
       </div>
 
@@ -37,7 +37,7 @@ export default function LocationSection() {
                 </div>
                 <div>
                   <p className="text-white font-black text-lg sm:text-xl font-display tracking-wide">Habib University</p>
-                  <p className="text-orange-400/70 text-[11px] uppercase tracking-widest font-semibold">Official HURC 2026 Venue</p>
+                  <p className="text-orange-400/70 text-[11px] uppercase tracking-widest font-semibold">Official HURC 2027 Venue</p>
                 </div>
               </div>
 

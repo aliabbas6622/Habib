@@ -130,7 +130,7 @@ export default function Navbar({
             />
             <div className="flex flex-col min-w-0">
               <span className="font-display text-lg sm:text-2xl font-bold tracking-wider text-white group-hover:text-orange-400 transition-colors flex items-center gap-1.5 leading-tight">
-                HURC 2026
+                HURC 2027
               </span>
               <span className="text-[10px] tracking-widest font-semibold text-orange-500 uppercase truncate max-w-[46vw] sm:max-w-none">
                 Habib University Robotics Competition

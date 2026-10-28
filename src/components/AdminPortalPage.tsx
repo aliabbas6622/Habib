@@ -126,7 +126,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
   const [customAdminLoginId, setCustomAdminLoginId] = useState(settings.adminLoginId);
   const [smtpEmail, setSmtpEmail] = useState(settings.smtpEmail || '');
   const [smtpPassword, setSmtpPassword] = useState('');
-  const [smtpFromName, setSmtpFromName] = useState(settings.smtpFromName || 'HURC 2026');
+  const [smtpFromName, setSmtpFromName] = useState(settings.smtpFromName || 'HURC 2027');
   const [smtpTestStatus, setSmtpTestStatus] = useState<string | null>(null);
 
   // Keep general settings editor in sync with the copy loaded from Firestore
@@ -137,7 +137,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
     setCustomSecretToken(settings.adminSecretToken);
     setCustomAdminLoginId(settings.adminLoginId);
     setSmtpEmail(settings.smtpEmail || '');
-    setSmtpFromName(settings.smtpFromName || 'HURC 2026');
+    setSmtpFromName(settings.smtpFromName || 'HURC 2027');
   }, [
     settings.announcementText,
     settings.countdownTargetDate,
@@ -312,7 +312,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
       adminSecretToken: customSecretToken,
       adminLoginId: customAdminLoginId.trim() || settings.adminLoginId,
       smtpEmail: smtpEmail.trim() || undefined,
-      smtpFromName: smtpFromName.trim() || 'HURC 2026'
+      smtpFromName: smtpFromName.trim() || 'HURC 2027'
     });
     if (smtpPassword.trim()) {
       setSaveSuccessMessage('Settings saved. To activate email sending, also set HURC_SMTP_EMAIL and HURC_SMTP_PASSWORD in your Vercel project environment variables (password is intentionally not stored in the database for security).');
@@ -332,7 +332,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
     try {
       await updateSettings({
         smtpEmail: smtpEmail.trim() || undefined,
-        smtpFromName: smtpFromName.trim() || 'HURC 2026'
+        smtpFromName: smtpFromName.trim() || 'HURC 2027'
       });
 
       const res = await fetch('/api/send-email', {
@@ -344,8 +344,8 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
         },
         body: JSON.stringify({
           to: smtpEmail.trim(),
-          subject: '[HURC 2026] SMTP Test Email',
-          html: '<p>This is a test email from your HURC 2026 admin dashboard. If you are reading this, email delivery is working!</p>'
+          subject: '[HURC 2027] SMTP Test Email',
+          html: '<p>This is a test email from your HURC 2027 admin dashboard. If you are reading this, email delivery is working!</p>'
         })
       });
       setSmtpTestStatus(res.ok ? 'success' : 'error');
@@ -439,7 +439,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `HURC_2026_All_Registrations_${new Date().toISOString().substring(0, 10)}.csv`);
+    link.setAttribute('download', `HURC_2027_All_Registrations_${new Date().toISOString().substring(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -460,7 +460,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                 Official Organizing Command
               </div>
               <h1 className="font-display text-2xl sm:text-3xl font-black uppercase text-white tracking-wide">
-                HURC 2026 Admin &amp; Customization Portal
+                HURC 2027 Admin &amp; Customization Portal
               </h1>
               <p className="text-xs text-stone-400 mt-0.5">
                 Full-spectrum control: Manage prices, upload arena assets/rulebooks, review registrations &amp; audit email dispatch.
@@ -1041,7 +1041,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                           type="url"
                           value={rulebookUrlInput}
                           onChange={(e) => setRulebookUrlInput(e.target.value)}
-                          placeholder="https://.../hurc-2026-robowars-rulebook.pdf"
+                          placeholder="https://.../hurc-2027-robowars-rulebook.pdf"
                           className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#120804] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500"
                         />
                       </div>
@@ -1099,7 +1099,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                       type="text"
                       value={customRulebookNameInput}
                       onChange={(e) => setCustomRulebookNameInput(e.target.value)}
-                      placeholder="Custom display document title (e.g. 2026-v2.pdf)..."
+                      placeholder="Custom display document title (e.g. 2027-v2.pdf)..."
                       className="flex-1 px-3 py-2 rounded-xl bg-[#120804] border border-amber-950 text-xs text-stone-200 focus:outline-none focus:border-orange-500"
                     />
                     <button

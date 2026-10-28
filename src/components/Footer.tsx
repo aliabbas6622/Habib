@@ -49,7 +49,7 @@ export default function Footer({ onNavigateHome }: FooterProps) {
 
         {/* Copyright */}
         <p className="text-xs text-stone-500 max-w-md mt-4">
-          © 2026 Habib University Robotics Competition. All rights reserved.
+          © 2027 Habib University Robotics Competition. All rights reserved.
         </p>
 
       </div>

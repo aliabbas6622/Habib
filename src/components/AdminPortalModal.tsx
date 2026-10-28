@@ -92,7 +92,7 @@ export default function AdminPortalModal({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `HURC_2026_Registrations_${new Date().toISOString().substring(0, 10)}.csv`);
+    link.setAttribute('download', `HURC_2027_Registrations_${new Date().toISOString().substring(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -110,7 +110,7 @@ export default function AdminPortalModal({
             </div>
             <div>
               <h2 className="font-display text-xl sm:text-2xl font-black uppercase text-white tracking-wide">
-                HURC 2026 Organizing Admin Portal
+                HURC 2027 Organizing Admin Portal
               </h2>
               <p className="text-xs text-stone-400">
                 Total Registrations: <span className="text-orange-400 font-bold">{registrations.length}</span>

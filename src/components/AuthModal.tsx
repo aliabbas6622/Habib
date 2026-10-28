@@ -76,7 +76,7 @@ export default function AuthModal() {
             <Lock className="w-6 h-6" />
           </div>
           <h2 className="font-display text-xl sm:text-2xl font-black uppercase text-white tracking-wide">
-            {isSignUp ? 'Create HURC Account' : 'Sign In to HURC 2026'}
+            {isSignUp ? 'Create HURC Account' : 'Sign In to HURC 2027'}
           </h2>
           <p className="text-xs text-stone-400 mt-1">
             {isSignUp 

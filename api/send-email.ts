@@ -68,7 +68,7 @@ export default async function handler(req: any, res: any) {
 
     const smtpEmail = settings.smtpEmail || process.env.HURC_SMTP_EMAIL;
     const smtpPassword = (req.headers['x-hurc-smtp-pass'] as string) || process.env.HURC_SMTP_PASSWORD;
-    const smtpFromName = settings.smtpFromName || fromName || 'HURC 2026';
+    const smtpFromName = settings.smtpFromName || fromName || 'HURC 2027';
 
     if (!smtpEmail || !smtpPassword) {
       return res.status(503).json({

@@ -59,7 +59,7 @@ export default function ModuleDetailView({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${escapeHtml(currentModule.title)} - Official Rulebook HURC 2026</title>
+          <title>${escapeHtml(currentModule.title)} - Official Rulebook HURC 2027</title>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <style>
             body { font-family: 'Segoe UI', Arial, sans-serif; padding: 32px; color: #111; line-height: 1.6; max-width: 900px; margin: 0 auto; }
@@ -76,7 +76,7 @@ export default function ModuleDetailView({
         </head>
         <body>
           <div class="header">
-            <h1>HURC 2026 - HABIB UNIVERSITY ROBOTICS COMPETITION</h1>
+            <h1>HURC 2027 - HABIB UNIVERSITY ROBOTICS COMPETITION</h1>
             <div class="subtitle">Official Competition Rulebook &amp; Guidelines &bull; ${escapeHtml(currentModule.title)}</div>
           </div>
           <div class="section">
@@ -102,7 +102,7 @@ export default function ModuleDetailView({
             <ul>${list(currentModule.rulebook.penaltiesAndDisqualifications)}</ul>
           </div>
           <div class="footer">
-            Habib University, Karachi &bull; Verified Technical Committee Document &bull; Session 2026
+            Habib University, Karachi &bull; Verified Technical Committee Document &bull; Session 2027
           </div>
         </body>
       </html>
@@ -142,7 +142,7 @@ export default function ModuleDetailView({
       const list = (items: string[]) => items.map(item => `<li>${escapeHtml(item)}</li>`).join('');
       const pw = window.open('', '_blank');
       if (!pw) return;
-      pw.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(currentModule.title)} - HURC 2026 Rulebook</title><style>body{font-family:'Segoe UI',Arial,sans-serif;padding:32px;color:#111;line-height:1.6;max-width:900px;margin:0 auto}.header{border-bottom:3px solid #ea580c;padding-bottom:20px;margin-bottom:30px;text-align:center}h1{color:#9a3412;font-size:26px;text-transform:uppercase;margin:0}.subtitle{color:#666;font-size:14px;margin-top:6px}.section{margin-bottom:25px}h2{font-size:18px;color:#c2410c;border-bottom:1px solid #e5e7eb;padding-bottom:6px}ul{padding-left:20px}li{margin-bottom:8px}.footer{margin-top:50px;text-align:center;font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:15px}@media print{body{padding:0}}</style></head><body><div class="header"><h1>HURC 2026 - HABIB UNIVERSITY ROBOTICS COMPETITION</h1><div class="subtitle">Official Rulebook &amp; Guidelines &bull; ${escapeHtml(currentModule.title)}</div></div><div class="section"><h2>1. Challenge Overview</h2><p>${escapeHtml(currentModule.description)}</p><ul>${list(currentModule.rulebook.overview)}</ul></div><div class="section"><h2>2. Arena Dimensions &amp; Footprint</h2><ul>${list(currentModule.rulebook.arenaDetails)}</ul></div><div class="section"><h2>3. Hardware &amp; Safety Specifications</h2><ul>${list(currentModule.rulebook.robotConstraints)}</ul></div><div class="section"><h2>4. Match Format &amp; Scoring</h2><ul>${list(currentModule.rulebook.matchFormat)}</ul><ul>${list(currentModule.rulebook.scoringSystem)}</ul></div><div class="section"><h2>5. Penalties &amp; Disqualifications</h2><ul>${list(currentModule.rulebook.penaltiesAndDisqualifications)}</ul></div><div class="footer">Habib University, Karachi &bull; Verified Technical Committee Document &bull; Session 2026</div><script>window.onload=function(){window.print();}<\/script></body></html>`);
+      pw.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(currentModule.title)} - HURC 2027 Rulebook</title><style>body{font-family:'Segoe UI',Arial,sans-serif;padding:32px;color:#111;line-height:1.6;max-width:900px;margin:0 auto}.header{border-bottom:3px solid #ea580c;padding-bottom:20px;margin-bottom:30px;text-align:center}h1{color:#9a3412;font-size:26px;text-transform:uppercase;margin:0}.subtitle{color:#666;font-size:14px;margin-top:6px}.section{margin-bottom:25px}h2{font-size:18px;color:#c2410c;border-bottom:1px solid #e5e7eb;padding-bottom:6px}ul{padding-left:20px}li{margin-bottom:8px}.footer{margin-top:50px;text-align:center;font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:15px}@media print{body{padding:0}}</style></head><body><div class="header"><h1>HURC 2027 - HABIB UNIVERSITY ROBOTICS COMPETITION</h1><div class="subtitle">Official Rulebook &amp; Guidelines &bull; ${escapeHtml(currentModule.title)}</div></div><div class="section"><h2>1. Challenge Overview</h2><p>${escapeHtml(currentModule.description)}</p><ul>${list(currentModule.rulebook.overview)}</ul></div><div class="section"><h2>2. Arena Dimensions &amp; Footprint</h2><ul>${list(currentModule.rulebook.arenaDetails)}</ul></div><div class="section"><h2>3. Hardware &amp; Safety Specifications</h2><ul>${list(currentModule.rulebook.robotConstraints)}</ul></div><div class="section"><h2>4. Match Format &amp; Scoring</h2><ul>${list(currentModule.rulebook.matchFormat)}</ul><ul>${list(currentModule.rulebook.scoringSystem)}</ul></div><div class="section"><h2>5. Penalties &amp; Disqualifications</h2><ul>${list(currentModule.rulebook.penaltiesAndDisqualifications)}</ul></div><div class="footer">Habib University, Karachi &bull; Verified Technical Committee Document &bull; Session 2027</div><script>window.onload=function(){window.print();}<\/script></body></html>`);
       pw.document.close();
       pw.focus();
       return;

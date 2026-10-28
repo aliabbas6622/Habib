@@ -181,7 +181,7 @@ export default function RegistrationPage({
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
     doc.setTextColor(255, 255, 255);
-    doc.text('HURC 2026', margin, 18);
+    doc.text('HURC 2027', margin, 18);
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
@@ -342,7 +342,7 @@ export default function RegistrationPage({
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.5);
       doc.setTextColor(120, 80, 50);
-      doc.text('HURC 2026 • Habib University Robotics Competition • Official Registration Slip', margin, pageH - 4);
+      doc.text('HURC 2027 • Habib University Robotics Competition • Official Registration Slip', margin, pageH - 4);
       doc.text(`Page ${i} of ${totalPages}`, pageW - margin, pageH - 4, { align: 'right' });
     }
 
@@ -454,7 +454,7 @@ export default function RegistrationPage({
       return;
     }
 
-    const regId = `HURC-2026-TEAM-${Math.floor(1000 + Math.random() * 9000)}`;
+    const regId = `HURC-2027-TEAM-${Math.floor(1000 + Math.random() * 9000)}`;
     const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
 
     const newRegistration: TeamRegistrationData = {
@@ -535,7 +535,7 @@ export default function RegistrationPage({
       return;
     }
 
-    const regId = `HURC-2026-AMB-${Math.floor(1000 + Math.random() * 9000)}`;
+    const regId = `HURC-2027-AMB-${Math.floor(1000 + Math.random() * 9000)}`;
     const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
 
     const newAmbassador: AmbassadorRegistrationData = {
@@ -662,7 +662,7 @@ export default function RegistrationPage({
         </div>
 
         <span className="text-[11px] font-bold tracking-widest uppercase text-orange-400 bg-orange-950/60 px-3 py-1 rounded-full border border-orange-900/60 mb-2">
-          HURC 2026 Registration Portal
+          HURC 2027 Registration Portal
         </span>
 
         <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-black uppercase text-white tracking-wide leading-tight">
@@ -672,7 +672,7 @@ export default function RegistrationPage({
         <p className="mt-2 text-stone-400 text-xs sm:text-sm max-w-xl">
           {activeTab === 'team'
             ? 'Register your competition team (3 to 5 members including leader) to battle in the Habib University Robotics Competition.'
-            : 'Apply to become an official HURC 2026 Campus Ambassador for your institute, college, or university.'}
+            : 'Apply to become an official HURC 2027 Campus Ambassador for your institute, college, or university.'}
         </p>
 
         {/* Tab Switcher — full width and never wider than the viewport, with the
@@ -1305,7 +1305,7 @@ export default function RegistrationPage({
                 <span className="font-bold text-white block mb-0.5">
                   Participant Declaration &amp; Truthfulness:
                 </span>
-                I understand and declare that all the information provided in this registration is accurate, legitimate, and truthful to the best of my knowledge. I agree to abide by all the rules, guidelines, and decisions of the HURC 2026 Organizing Committee.
+                I understand and declare that all the information provided in this registration is accurate, legitimate, and truthful to the best of my knowledge. I agree to abide by all the rules, guidelines, and decisions of the HURC 2027 Organizing Committee.
               </div>
             </label>
           </div>
@@ -1514,7 +1514,7 @@ export default function RegistrationPage({
 
             <div>
               <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                Why do you want to represent HURC 2026? <span className="text-orange-500">*</span>
+                Why do you want to represent HURC 2027? <span className="text-orange-500">*</span>
               </label>
               <textarea
                 required
@@ -1537,7 +1537,7 @@ export default function RegistrationPage({
                 className="mt-1 w-4 h-4 rounded text-orange-600 focus:ring-orange-500 bg-[#120804] border-amber-900 cursor-pointer"
               />
               <span className="text-xs text-stone-300 leading-relaxed">
-                I agree to actively promote HURC 2026, adhere to the code of conduct, and facilitate team registrations in my institution.
+                I agree to actively promote HURC 2027, adhere to the code of conduct, and facilitate team registrations in my institution.
               </span>
             </label>
           </div>

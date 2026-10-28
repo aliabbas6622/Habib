@@ -88,10 +88,10 @@ export interface CompetitionSettings {
 }
 
 export const DEFAULT_ADMIN_LOGIN_ID = 'hurc3426@gmail.com';
-export const DEFAULT_ADMIN_SECRET_TOKEN = 'hurc2026_super_admin';
+export const DEFAULT_ADMIN_SECRET_TOKEN = 'hurc2027_super_admin';
 
 const DEFAULT_SETTINGS: CompetitionSettings = {
-  announcementText: 'HURC 2026 • Habib University Robotics Competition',
+  announcementText: 'HURC 2027 • Habib University Robotics Competition',
   countdownTargetDate: '2027-01-04T09:00:00',
   adminSecretToken: DEFAULT_ADMIN_SECRET_TOKEN,
   adminLoginId: DEFAULT_ADMIN_LOGIN_ID,
@@ -152,8 +152,8 @@ const ASSET_KEY_LIST = [
 
 const assetDocRef = (key: string) => doc(db, 'settings', `${ASSET_DOC_PREFIX}${key}`);
 
-const ASSET_LOCAL_CACHE = 'hurc_2026_asset_blobs';
-export const REGISTRATIONS_LOCAL_CACHE = 'hurc_2026_registrations';
+const ASSET_LOCAL_CACHE = 'hurc_2027_asset_blobs';
+export const REGISTRATIONS_LOCAL_CACHE = 'hurc_2027_registrations';
 
 /**
  * Firestore's per-document limit is 1 MiB and base64 inflates a file by ~33%,
@@ -255,7 +255,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
   const [registrations, setRegistrations] = useState<(TeamRegistrationData | AmbassadorRegistrationData)[]>(() => {
     // Only hydrate this device's locally cached registrations; never seed demo data to visitors
     try {
-      const saved = localStorage.getItem(REGISTRATIONS_LOCAL_CACHE);
+      const saved = localStorage.getItem(REGISTRATIONS_LOCAL_CACHE) || localStorage.getItem('hurc_2026_registrations');
       if (saved) return JSON.parse(saved);
     } catch {}
     return [];

@@ -71,7 +71,7 @@ export default function HeroSection({ onRegisterClick }: HeroSectionProps) {
 
         {/* Massive Display Title */}
         <h1 className="font-display text-[2.75rem] leading-none sm:text-7xl lg:text-8xl font-black tracking-tight text-white uppercase drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]">
-          HURC 2026
+          HURC 2027
         </h1>
 
         {/* Subheading */}

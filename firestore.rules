@@ -22,6 +22,7 @@ service cloud.firestore {
         request.auth.token.email == 'hurc3426@gmail.com'        ||
         request.auth.token.email == 'admin@hurc.habib.edu.pk'   ||
         request.auth.token.email == 'organizer@hurc2026.com'    ||
+        request.auth.token.email == 'organizer@hurc2027.com'    ||
         (
           exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'

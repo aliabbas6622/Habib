@@ -21,7 +21,7 @@ export function generateTeamConfirmationEmailHtml(reg: TeamRegistrationData, tot
     <html>
       <head>
         <meta charset="utf-8">
-        <title>HURC 2026 Official Registration Confirmation</title>
+        <title>HURC 2027 Official Registration Confirmation</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0c0704; color: #f5f5f4; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: #1a0f0a; border: 1px solid #78350f; border-radius: 16px; overflow: hidden; }
@@ -45,7 +45,7 @@ export function generateTeamConfirmationEmailHtml(reg: TeamRegistrationData, tot
       <body>
         <div class="container">
           <div class="header">
-            <h1>HURC 2026</h1>
+            <h1>HURC 2027</h1>
             <p>HABIB UNIVERSITY ROBOTICS COMPETITION</p>
           </div>
           <div class="body">
@@ -55,7 +55,7 @@ export function generateTeamConfirmationEmailHtml(reg: TeamRegistrationData, tot
               Dear <strong>${reg.leader.fullName}</strong>,
             </p>
             <p style="font-size: 14px; color: #d6d3d1; line-height: 1.6;">
-              Congratulations! Your team <strong>${reg.teamName}</strong> has been successfully registered for the <strong>Habib University Robotics Competition 2026</strong>. Below is your official registration summary and e-dossier.
+              Congratulations! Your team <strong>${reg.teamName}</strong> has been successfully registered for the <strong>Habib University Robotics Competition 2027</strong>. Below is your official registration summary and e-dossier.
             </p>
 
             <div class="details-card">
@@ -113,10 +113,10 @@ export function generateTeamConfirmationEmailHtml(reg: TeamRegistrationData, tot
               • Official WhatsApp group invitations and match draw brackets will be communicated via your leader email.
             </p>
 
-            <a href="https://hurc2026.vercel.app/#/register" class="btn">View &amp; Print Team Slip</a>
+            <a href="https://hurc2027.vercel.app/#/register" class="btn">View &amp; Print Team Slip</a>
           </div>
           <div class="footer">
-            © 2026 Habib University Robotics Competition (HURC).<br>
+            © 2027 Habib University Robotics Competition (HURC).<br>
             Habib University, Block 18, Gulistan-e-Jauhar, University Avenue, Karachi.<br>
             Need assistance? Contact hurc3426@gmail.com
           </div>
@@ -132,7 +132,7 @@ export function generateAmbassadorConfirmationEmailHtml(reg: AmbassadorRegistrat
     <html>
       <head>
         <meta charset="utf-8">
-        <title>HURC 2026 Ambassador Application Received</title>
+        <title>HURC 2027 Ambassador Application Received</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0c0704; color: #f5f5f4; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: #1a0f0a; border: 1px solid #78350f; border-radius: 16px; overflow: hidden; }
@@ -150,14 +150,14 @@ export function generateAmbassadorConfirmationEmailHtml(reg: AmbassadorRegistrat
       <body>
         <div class="container">
           <div class="header">
-            <h1>HURC 2026</h1>
+            <h1>HURC 2027</h1>
             <p>CAMPUS AMBASSADOR PROGRAM</p>
           </div>
           <div class="body">
             <div class="badge">APPLICATION SUBMITTED • ID: ${reg.id}</div>
             <p style="font-size: 16px; margin-top: 0;">Dear <strong>${reg.fullName}</strong>,</p>
             <p style="font-size: 14px; color: #d6d3d1; line-height: 1.6;">
-              Thank you for applying to be a Campus Ambassador for HURC 2026 representing <strong>${reg.university}</strong>! Our organizing committee has received your submission and will review your outreach strategy.
+              Thank you for applying to be a Campus Ambassador for HURC 2027 representing <strong>${reg.university}</strong>! Our organizing committee has received your submission and will review your outreach strategy.
             </p>
             <div class="details-card">
               <div class="row"><span class="label">Candidate</span><span class="value">${reg.fullName}</span></div>
@@ -171,7 +171,7 @@ export function generateAmbassadorConfirmationEmailHtml(reg: AmbassadorRegistrat
             </p>
           </div>
           <div class="footer">
-            © 2026 Habib University Robotics Competition (HURC).<br>
+            © 2027 Habib University Robotics Competition (HURC).<br>
             Habib University, Karachi.
           </div>
         </div>
@@ -194,8 +194,8 @@ export async function sendRegistrationConfirmationEmail(
     : (reg as AmbassadorRegistrationData).fullName;
 
   const subject = isTeam
-    ? `[HURC 2026] Registration Confirmed: ${(reg as TeamRegistrationData).teamName} (#${reg.id})`
-    : `[HURC 2026] Ambassador Application Received (#${reg.id})`;
+    ? `[HURC 2027] Registration Confirmed: ${(reg as TeamRegistrationData).teamName} (#${reg.id})`
+    : `[HURC 2027] Ambassador Application Received (#${reg.id})`;
 
   const htmlContent = isTeam
     ? generateTeamConfirmationEmailHtml(reg as TeamRegistrationData, totalFeePKR)
