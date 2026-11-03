@@ -210,9 +210,9 @@ export const COMPETITION_MODULES: CompetitionModule[] = [
     },
     rulebook: {
       overview: [
-        'Two autonomous sumo robots face opposite directions at the starting lines (Shikiri-sen).',
+        'Two remote-controlled sumo robots face opposite directions at the starting lines (Shikiri-sen).',
         'Upon referee command, team operators press the start button. Both robots must remain strictly motionless for a 5-second safety count.',
-        'The objective is to locate the opposing robot and push it completely off the Dohyo ring surface.'
+        'The objective is to drive toward the opposing robot and push it completely off the Dohyo ring surface.'
       ],
       arenaDetails: [
         'Dohyo diameter: 1540 mm circular platform, elevated 50 mm above floor level.',

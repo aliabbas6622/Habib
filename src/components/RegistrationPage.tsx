@@ -734,7 +734,7 @@ export default function RegistrationPage({
                   Select Competition Modules / Workshop <span className="text-orange-500">*</span>
                 </h2>
                 <p className="text-xs text-stone-400 mt-1 leading-relaxed">
-                  Select one or more competition modules. <strong className="text-orange-400">Note:</strong> If you select the <em>Drone Workshop</em>, it is a standalone session (PKR 4,000 per person) and cannot be combined with other arena competitions.
+                  Select one or more competition modules. <strong className="text-orange-400">Note:</strong> If you select the <em>Drone Workshop</em>, it is a standalone session (PKR 5,000 per person) and cannot be combined with other arena competitions.
                 </p>
               </div>
             </div>
