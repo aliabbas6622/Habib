@@ -1,4 +1,4 @@
-import { CompetitionModule, TeamRegistrationData } from '../types';
+import { CompetitionModule } from '../types';
 
 import hurcLogoImg from '../assets/images/hurc_logo.png';
 import robowarsImg from '../assets/images/robowars_combat_1789497570448.jpg';
@@ -365,6 +365,42 @@ export const COMPETITION_MODULES: CompetitionModule[] = [
       secondPlace: 'PKR 35,000 + Silver Shield',
       thirdPlace: 'PKR 20,000 + Bronze Shield',
       bestDesign: 'PKR 15,000 (Best Custom Build & Telemetry)'
+    }
+  },
+  {
+    id: 'hackathon',
+    slug: 'hackathon',
+    title: 'Hackathon',
+    shortTitle: 'Hackathon',
+    category: 'Software & Innovation',
+    iconName: 'Code',
+    badge: 'Hackathon',
+    image: droneWorkshopImg,
+    isStandalone: true,
+    tagline: 'Build. Innovate. Compete.',
+    description:
+      'Coming Soon — Full details, rules, and registration for the HURC 2027 Hackathon will be announced shortly. Stay tuned for an exciting innovation challenge open to all university teams.',
+    specs: {
+      teamSize: '1 - 4 Members (Leader + up to 3 Members)',
+      robotWeight: 'N/A',
+      dimensions: 'N/A',
+      arenaSize: 'Coming Soon',
+      powerLimit: 'N/A',
+      controlType: 'Software / Hardware'
+    },
+    rulebook: {
+      overview: ['Full details coming soon. Stay tuned for the official HURC 2027 Hackathon announcement.'],
+      arenaDetails: ['Venue details will be announced closer to the event.'],
+      robotConstraints: ['Rules and constraints will be published with the official rulebook.'],
+      matchFormat: ['Match format and schedule details coming soon.'],
+      scoringSystem: ['Scoring criteria will be published with the official rulebook.'],
+      penaltiesAndDisqualifications: ['Penalty and disqualification rules coming soon.']
+    },
+    prizePool: {
+      firstPlace: 'To Be Announced',
+      secondPlace: 'To Be Announced',
+      thirdPlace: 'To Be Announced',
+      bestDesign: 'To Be Announced'
     }
   }
 ];

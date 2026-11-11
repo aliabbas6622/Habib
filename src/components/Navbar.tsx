@@ -10,6 +10,7 @@ import {
   Cpu,
   Compass,
   Flame,
+  Code,
   UserPlus,
   LogOut,
   ShieldAlert
@@ -34,6 +35,7 @@ export function getModuleIcon(iconName: string, className = 'w-5 h-5') {
     case 'Shield': return <Shield className={`${className} text-orange-400`} />;
     case 'Cpu': return <Cpu className={`${className} text-amber-400`} />;
     case 'Compass': return <Compass className={`${className} text-orange-400`} />;
+    case 'Code': return <Code className={`${className} text-purple-400`} />;
     default: return <Flame className={`${className} text-orange-400`} />;
   }
 }

@@ -1,13 +1,14 @@
+
 import { useState, FormEvent, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
-import { 
-  ArrowLeft, 
-  Users, 
-  GraduationCap, 
-  CheckSquare, 
-  Square, 
-  Send, 
-  CheckCircle2, 
+import {
+  ArrowLeft,
+  Users,
+  GraduationCap,
+  CheckSquare,
+  Square,
+  Send,
+  CheckCircle2,
   AlertCircle,
   FileCheck,
   Download,
@@ -360,19 +361,25 @@ export default function RegistrationPage({
       return;
     }
 
-    if (modId === 'drone-workshop') {
-      if (selectedModules.includes('drone-workshop')) {
+    if (modId === 'drone-workshop' || modId === 'hackathon') {
+      if (selectedModules.includes(modId)) {
         setSelectedModules([]);
       } else {
-        // Drone workshop is standalone, replace other selections
-        setSelectedModules(['drone-workshop']);
+        // Standalone modules cannot be combined
+        setSelectedModules([modId]);
+        if (modId === 'hackathon' && memberCount > 4) {
+          setMemberCount(4);
+        }
       }
       return;
     }
 
-    // If Drone Workshop was selected and user clicks another module, remove drone workshop
-    if (selectedModules.includes('drone-workshop')) {
+    // If a standalone module was selected and user clicks another module, replace it
+    if (selectedModules.includes('drone-workshop') || selectedModules.includes('hackathon')) {
       setSelectedModules([modId]);
+      if (memberCount < 3) {
+        setMemberCount(3);
+      }
       return;
     }
 
@@ -390,6 +397,9 @@ export default function RegistrationPage({
   };
 
   const isDroneWorkshop = selectedModules.includes('drone-workshop');
+  const isHackathon = selectedModules.includes('hackathon');
+  // Drone workshop is the only single-person standalone module
+  const isSingleParticipantModule = isDroneWorkshop;
 
   const handleTeamSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -411,31 +421,31 @@ export default function RegistrationPage({
       return;
     }
 
-    if (!isDroneWorkshop && !teamName.trim()) {
+    if (!isSingleParticipantModule && !teamName.trim()) {
       setErrorMessage('Please enter your Team Name.');
       return;
     }
 
     if (!leaderFullName.trim() || !leaderEmail.trim() || !leaderPhone.trim() || !leaderUniversity.trim()) {
-      setErrorMessage(isDroneWorkshop ? 'Please complete all required fields.' : 'Please complete all required fields for the Team Leader.');
+      setErrorMessage(isSingleParticipantModule ? 'Please complete all required fields.' : 'Please complete all required fields for the Team Leader.');
       return;
     }
 
     if (leaderCnic.length !== 13) {
-      setErrorMessage(isDroneWorkshop ? 'CNIC must be exactly 13 digits without dashes.' : 'Leader CNIC must be exactly 13 digits without dashes.');
+      setErrorMessage(isSingleParticipantModule ? 'CNIC must be exactly 13 digits without dashes.' : 'Leader CNIC must be exactly 13 digits without dashes.');
       return;
     }
     if (leaderPhone.length !== 11 || !leaderPhone.startsWith('03')) {
-      setErrorMessage(isDroneWorkshop ? 'Phone Number must be exactly 11 digits and start with 03.' : 'Leader Phone Number must be exactly 11 digits and start with 03.');
+      setErrorMessage(isSingleParticipantModule ? 'Phone Number must be exactly 11 digits and start with 03.' : 'Leader Phone Number must be exactly 11 digits and start with 03.');
       return;
     }
     if (leaderWhatsapp && (leaderWhatsapp.length !== 11 || !leaderWhatsapp.startsWith('03'))) {
-      setErrorMessage(isDroneWorkshop ? 'WhatsApp Number must be exactly 11 digits and start with 03.' : 'Leader WhatsApp Number must be exactly 11 digits and start with 03.');
+      setErrorMessage(isSingleParticipantModule ? 'WhatsApp Number must be exactly 11 digits and start with 03.' : 'Leader WhatsApp Number must be exactly 11 digits and start with 03.');
       return;
     }
 
     // Check required additional members
-    const actualMemberCount = isDroneWorkshop ? 1 : memberCount;
+    const actualMemberCount = isSingleParticipantModule ? 1 : (isHackathon ? Math.min(Math.max(memberCount, 1), 4) : memberCount);
     const requiredMemberCount = actualMemberCount - 1; // e.g. 3 members total = 2 additional
     for (let i = 0; i < requiredMemberCount; i++) {
       const m = members[i];
@@ -637,7 +647,7 @@ export default function RegistrationPage({
   // MAIN REGISTRATION FORM (Matches Screenshot 2)
   return (
     <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
-      
+
       {/* Back to Home Button */}
       <div className="mb-6">
         <button
@@ -653,9 +663,9 @@ export default function RegistrationPage({
       {/* Header with Circular Badge */}
       <div className="text-center mb-8 flex flex-col items-center">
         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-[#1b1009] border-2 border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.25)] mb-3">
-          <img 
-            src={logoUrl} 
-            alt="HURC Logo" 
+          <img
+            src={logoUrl}
+            alt="HURC Logo"
             className="w-full h-full object-cover rounded-full"
             referrerPolicy="no-referrer"
           />
@@ -682,11 +692,10 @@ export default function RegistrationPage({
             type="button"
             id="tab-team-btn"
             onClick={() => setActiveTab('team')}
-            className={`min-w-0 px-2.5 sm:px-5 py-2.5 rounded-lg text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${
-              activeTab === 'team'
+            className={`min-w-0 px-2.5 sm:px-5 py-2.5 rounded-lg text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${activeTab === 'team'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md'
                 : 'text-stone-400 hover:text-white'
-            }`}
+              }`}
           >
             <Users className="w-4 h-4 shrink-0" />
             <span className="truncate">
@@ -699,11 +708,10 @@ export default function RegistrationPage({
             type="button"
             id="tab-ambassador-btn"
             onClick={() => setActiveTab('ambassador')}
-            className={`min-w-0 px-2.5 sm:px-5 py-2.5 rounded-lg text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${
-              activeTab === 'ambassador'
+            className={`min-w-0 px-2.5 sm:px-5 py-2.5 rounded-lg text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${activeTab === 'ambassador'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md'
                 : 'text-stone-400 hover:text-white'
-            }`}
+              }`}
           >
             <GraduationCap className="w-4 h-4 shrink-0" />
             <span className="truncate">Campus Ambassador</span>
@@ -722,7 +730,7 @@ export default function RegistrationPage({
       {/* ================= TEAM REGISTRATION FORM ================= */}
       {activeTab === 'team' ? (
         <form onSubmit={handleTeamSubmit} className="space-y-8">
-          
+
           {/* STEP 1: Select Competition Modules */}
           <div className="rounded-2xl bg-[#1a0f09] border border-amber-950/90 p-5 sm:p-7 shadow-lg">
             <div className="flex items-start gap-3 mb-4">
@@ -734,7 +742,7 @@ export default function RegistrationPage({
                   Select Competition Modules / Workshop <span className="text-orange-500">*</span>
                 </h2>
                 <p className="text-xs text-stone-400 mt-1 leading-relaxed">
-                  Select one or more competition modules. <strong className="text-orange-400">Note:</strong> If you select the <em>Drone Workshop</em>, it is a standalone session (PKR 5,000 per person) and cannot be combined with other arena competitions.
+                  Select one or more competition modules. <strong className="text-orange-400">Note:</strong> The <em>Drone Workshop</em> (PKR 5,000/person) and <em>Hackathon</em> are standalone sessions and cannot be combined with other modules.
                 </p>
               </div>
             </div>
@@ -749,13 +757,12 @@ export default function RegistrationPage({
                     key={mod.id}
                     id={`checkbox-mod-${mod.id}`}
                     onClick={() => !isClosed && handleToggleModule(mod.id)}
-                    className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 transition-all ${
-                      isClosed
+                    className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 transition-all ${isClosed
                         ? 'bg-[#120806] border-red-950/60 opacity-60 cursor-not-allowed'
                         : isSelected
                           ? 'bg-[#29160c] border-orange-500/70 shadow-[0_0_15px_rgba(249,115,22,0.15)] cursor-pointer'
                           : 'bg-[#150c07] border-amber-950/70 hover:border-amber-800/80 hover:bg-[#1d1009] cursor-pointer'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {isSelected ? (
@@ -799,12 +806,12 @@ export default function RegistrationPage({
               </span>
               <div>
                 <h2 className="font-display text-lg sm:text-xl font-bold text-white uppercase">
-                  {isDroneWorkshop ? 'Participant Details' : 'Team Details'}
+                  {isSingleParticipantModule ? 'Participant Details' : 'Team Details'}
                 </h2>
               </div>
             </div>
 
-            {isDroneWorkshop ? (
+            {isSingleParticipantModule ? (
               <div>
                 <label className="block text-xs font-semibold text-stone-300 mb-1.5">
                   Team Name <span className="text-stone-500 text-xs font-normal">(Optional)</span>
@@ -836,18 +843,34 @@ export default function RegistrationPage({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                    Total Team Members (Leader + Members: 3 to 5) <span className="text-orange-500">*</span>
+                    {isHackathon 
+                      ? 'Total Team Members (Leader + up to 3 Members)'
+                      : 'Total Team Members (Leader + Members: 3 to 5)'} <span className="text-orange-500">*</span>
                   </label>
-                  <select
-                    id="select-member-count"
-                    value={memberCount}
-                    onChange={(e) => setMemberCount(Number(e.target.value))}
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
-                  >
-                    <option value={3}>3 Members (Leader + 2 Members)</option>
-                    <option value={4}>4 Members (Leader + 3 Members)</option>
-                    <option value={5}>5 Members (Leader + 4 Members)</option>
-                  </select>
+                  {isHackathon ? (
+                    <select
+                      id="select-member-count"
+                      value={memberCount}
+                      onChange={(e) => setMemberCount(Number(e.target.value))}
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                    >
+                      <option value={1}>1 Member (Individual Participant / Leader only)</option>
+                      <option value={2}>2 Members (Leader + 1 Member)</option>
+                      <option value={3}>3 Members (Leader + 2 Members)</option>
+                      <option value={4}>4 Members (Leader + 3 Members)</option>
+                    </select>
+                  ) : (
+                    <select
+                      id="select-member-count"
+                      value={memberCount}
+                      onChange={(e) => setMemberCount(Number(e.target.value))}
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#120804] border border-amber-950 focus:border-orange-500 focus:outline-none text-stone-100 text-sm"
+                    >
+                      <option value={3}>3 Members (Leader + 2 Members)</option>
+                      <option value={4}>4 Members (Leader + 3 Members)</option>
+                      <option value={5}>5 Members (Leader + 4 Members)</option>
+                    </select>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-stone-300 mb-1.5">
@@ -874,7 +897,7 @@ export default function RegistrationPage({
               </span>
               <div>
                 <h2 className="font-display text-lg sm:text-xl font-bold text-white uppercase">
-                  {isDroneWorkshop ? 'Participant - Personal Information' : 'Team Leader - Personal Information'}
+                  {isSingleParticipantModule ? 'Participant - Personal Information' : 'Team Leader - Personal Information'}
                 </h2>
               </div>
             </div>
@@ -883,7 +906,7 @@ export default function RegistrationPage({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                    {isDroneWorkshop ? 'Full Name' : 'Leader Full Name'} <span className="text-orange-500">*</span>
+                    {isSingleParticipantModule ? 'Full Name' : 'Leader Full Name'} <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -968,7 +991,7 @@ export default function RegistrationPage({
               </span>
               <div>
                 <h2 className="font-display text-lg sm:text-xl font-bold text-white uppercase">
-                  {isDroneWorkshop ? 'Participant - Contact Information' : 'Team Leader - Contact Information'}
+                  {isSingleParticipantModule ? 'Participant - Contact Information' : 'Team Leader - Contact Information'}
                 </h2>
               </div>
             </div>
@@ -1061,7 +1084,7 @@ export default function RegistrationPage({
               </span>
               <div>
                 <h2 className="font-display text-lg sm:text-xl font-bold text-white uppercase">
-                  {isDroneWorkshop ? 'Participant - Academic Information' : 'Team Leader - Academic Information'}
+                  {isSingleParticipantModule ? 'Participant - Academic Information' : 'Team Leader - Academic Information'}
                 </h2>
               </div>
             </div>
@@ -1069,7 +1092,7 @@ export default function RegistrationPage({
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                  {isDroneWorkshop ? 'University / Institution' : 'Leader University / Institution'} <span className="text-orange-500">*</span>
+                  {isSingleParticipantModule ? 'University / Institution' : 'Leader University / Institution'} <span className="text-orange-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1116,11 +1139,11 @@ export default function RegistrationPage({
           </div>
 
           {/* DYNAMIC ADDITIONAL TEAM MEMBERS SECTION */}
-          {!isDroneWorkshop && (
+          {!isSingleParticipantModule && memberCount > 1 && (
             <div className="space-y-6">
               <div className="border-l-4 border-orange-500 pl-4 py-1">
                 <h2 className="font-display text-xl sm:text-2xl font-black uppercase text-white tracking-wide">
-                  ADDITIONAL TEAM MEMBERS ({memberCount - 1} MEMBERS)
+                  ADDITIONAL TEAM MEMBERS ({memberCount - 1} {memberCount - 1 === 1 ? 'MEMBER' : 'MEMBERS'})
                 </h2>
                 <p className="text-xs text-stone-400 mt-0.5">
                   Enter details for each team member. Members can belong to different universities or colleges.
@@ -1133,8 +1156,8 @@ export default function RegistrationPage({
                 const memData = members[idx];
 
                 return (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     id={`card-team-member-${memberNumber}`}
                     className="rounded-2xl bg-[#1c100a] border border-amber-950/80 p-5 sm:p-7 shadow-lg"
                   >
@@ -1325,7 +1348,7 @@ export default function RegistrationPage({
             ) : (
               <>
                 <Send className="w-5 h-5 text-white" />
-                <span>{isDroneWorkshop ? 'SUBMIT REGISTRATION' : `SUBMIT TEAM REGISTRATION (${memberCount})`}</span>
+                <span>{isSingleParticipantModule ? 'SUBMIT REGISTRATION' : `SUBMIT TEAM REGISTRATION (${memberCount})`}</span>
               </>
             )}
           </button>

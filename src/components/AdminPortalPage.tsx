@@ -276,7 +276,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
       const existing = mergedPricings[mod.id] || settings.pricings[mod.id];
       mergedPricings[mod.id] = {
         moduleId: mod.id,
-        registrationFeePKR: existing?.registrationFeePKR !== undefined ? existing.registrationFeePKR : (mod.id === 'drone-workshop' ? 5000 : 4500),
+        registrationFeePKR: existing?.registrationFeePKR !== undefined ? existing.registrationFeePKR : (mod.id === 'drone-workshop' ? 5000 : mod.id === 'hackathon' ? 3000 : 4500),
         prizeFirstPKR: existing?.prizeFirstPKR || 'PKR 100,000 Cash',
         prizeSecondPKR: existing?.prizeSecondPKR || 'PKR 50,000 Cash',
         prizeThirdPKR: existing?.prizeThirdPKR || 'PKR 25,000 Cash',
@@ -292,7 +292,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
     const existing = localPricings[moduleId] || settings.pricings[moduleId];
     const pricing: ModulePricing = {
       moduleId,
-      registrationFeePKR: existing?.registrationFeePKR !== undefined ? existing.registrationFeePKR : (moduleId === 'drone-workshop' ? 5000 : 4500),
+      registrationFeePKR: existing?.registrationFeePKR !== undefined ? existing.registrationFeePKR : (moduleId === 'drone-workshop' ? 5000 : moduleId === 'hackathon' ? 3000 : 4500),
       prizeFirstPKR: existing?.prizeFirstPKR || 'PKR 100,000 Cash',
       prizeSecondPKR: existing?.prizeSecondPKR || 'PKR 50,000 Cash',
       prizeThirdPKR: existing?.prizeThirdPKR || 'PKR 25,000 Cash',
@@ -714,7 +714,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                 {modules.map((mod) => {
                   const currentPricing = localPricings[mod.id] || {
                     moduleId: mod.id,
-                    registrationFeePKR: mod.id === 'drone-workshop' ? 5000 : 4500,
+                    registrationFeePKR: mod.id === 'drone-workshop' ? 5000 : mod.id === 'hackathon' ? 3000 : 4500,
                     prizeFirstPKR: 'PKR 100,000 Cash',
                     prizeSecondPKR: 'PKR 50,000 Cash',
                     prizeThirdPKR: 'PKR 25,000 Cash',
@@ -760,10 +760,10 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                         <div className="flex items-center justify-between text-xs">
                           <label className="text-stone-300 font-semibold flex items-center gap-1.5">
                             <DollarSign className="w-3.5 h-3.5 text-orange-400" />
-                            <span>{mod.id === 'drone-workshop' ? 'Fee per Person (PKR)' : 'Fee per Team (PKR)'}</span>
+                            <span>{mod.id === 'drone-workshop' || mod.id === 'hackathon' ? 'Fee per Person (PKR)' : 'Fee per Team (PKR)'}</span>
                           </label>
                           <span className="text-[11px] font-mono font-bold text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-800/40">
-                            PKR {(currentPricing.registrationFeePKR !== undefined ? currentPricing.registrationFeePKR : (mod.id === 'drone-workshop' ? 5000 : 4500)).toLocaleString()}
+                            PKR {(currentPricing.registrationFeePKR !== undefined ? currentPricing.registrationFeePKR : (mod.id === 'drone-workshop' ? 5000 : mod.id === 'hackathon' ? 3000 : 4500)).toLocaleString()}
                           </span>
                         </div>
 
@@ -776,7 +776,7 @@ export default function AdminPortalPage({ onBackToHome }: AdminPortalPageProps) 
                               type="number"
                               min="0"
                               step="100"
-                              value={currentPricing.registrationFeePKR !== undefined ? currentPricing.registrationFeePKR : (mod.id === 'drone-workshop' ? 5000 : 4500)}
+                              value={currentPricing.registrationFeePKR !== undefined ? currentPricing.registrationFeePKR : (mod.id === 'drone-workshop' ? 5000 : mod.id === 'hackathon' ? 3000 : 4500)}
                               onChange={(e) => {
                                 const raw = e.target.value;
                                 const val = raw === '' ? 0 : parseInt(raw, 10);

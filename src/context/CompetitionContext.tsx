@@ -105,7 +105,8 @@ const DEFAULT_SETTINGS: CompetitionSettings = {
     'line-following-robot': { moduleId: 'line-following-robot', registrationFeePKR: 4500, prizeFirstPKR: 'PKR 80,000 Cash Prize', prizeSecondPKR: 'PKR 40,000 Cash Prize', prizeThirdPKR: 'PKR 20,000 Cash Prize', isOpen: true },
     'sumo-wars': { moduleId: 'sumo-wars', registrationFeePKR: 4500, prizeFirstPKR: 'PKR 90,000 Cash Prize', prizeSecondPKR: 'PKR 45,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
     'autonomous-navigation': { moduleId: 'autonomous-navigation', registrationFeePKR: 4500, prizeFirstPKR: 'PKR 100,000 Cash Prize', prizeSecondPKR: 'PKR 50,000 Cash Prize', prizeThirdPKR: 'PKR 25,000 Cash Prize', isOpen: true },
-    'drone-workshop': { moduleId: 'drone-workshop', registrationFeePKR: 5000, prizeFirstPKR: 'PKR 70,000 Drone Kit & Trophy', prizeSecondPKR: 'PKR 35,000 High-Torque ESC Kit', prizeThirdPKR: 'Special FPV Goggles Kit', isOpen: true }
+    'drone-workshop': { moduleId: 'drone-workshop', registrationFeePKR: 5000, prizeFirstPKR: 'PKR 70,000 Drone Kit & Trophy', prizeSecondPKR: 'PKR 35,000 High-Torque ESC Kit', prizeThirdPKR: 'Special FPV Goggles Kit', isOpen: true },
+    'hackathon': { moduleId: 'hackathon', registrationFeePKR: 3000, prizeFirstPKR: 'To Be Announced', prizeSecondPKR: 'To Be Announced', prizeThirdPKR: 'To Be Announced', isOpen: true }
   },
   moduleCustomAssets: {},
   studentBody: [
@@ -781,7 +782,7 @@ export function CompetitionProvider({ children }: { children: ReactNode }) {
       ...m,
       image: bannerBlob || customAsset.customBannerUrl || m.image,
       isOpen: customPrice ? customPrice.isOpen : true,
-      registrationFeePKR: customPrice ? customPrice.registrationFeePKR : 4500,
+      registrationFeePKR: customPrice ? customPrice.registrationFeePKR : (m.id === 'drone-workshop' ? 5000 : m.id === 'hackathon' ? 3000 : 4500),
       prizePool: {
         ...m.prizePool,
         firstPlace: customPrice?.prizeFirstPKR || m.prizePool.firstPlace,
