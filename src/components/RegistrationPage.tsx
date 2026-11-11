@@ -681,12 +681,11 @@ export default function RegistrationPage({
 
         <p className="mt-2 text-stone-400 text-xs sm:text-sm max-w-xl">
           {activeTab === 'team'
-            ? 'Register your competition team (3 to 5 members including leader) to battle in the Habib University Robotics Competition.'
+            ? 'Register your team or participant to battle in the Habib University Robotics Competition.'
             : 'Apply to become an official HURC 2027 Campus Ambassador for your institute, college, or university.'}
         </p>
 
-        {/* Tab Switcher — full width and never wider than the viewport, with the
-            long "3-5 Members" hint dropped on the narrowest screens. */}
+        {/* Tab Switcher */}
         <div className="mt-6 w-full sm:w-auto grid grid-cols-2 sm:flex rounded-xl bg-[#180e08] p-1.5 border border-amber-950/80 shadow-inner">
           <button
             type="button"
@@ -698,10 +697,7 @@ export default function RegistrationPage({
               }`}
           >
             <Users className="w-4 h-4 shrink-0" />
-            <span className="truncate">
-              Competition Team
-              <span className="hidden sm:inline"> (3-5 Members)</span>
-            </span>
+            <span className="truncate">Competition Team</span>
           </button>
 
           <button
